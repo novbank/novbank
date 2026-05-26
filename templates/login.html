@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block auth %}
+<div class="login-page">
+  <div class="login-left">
+    <div class="login-brand">
+      <img src="{{ url_for('static', filename='logo.png') }}" class="logo-img-lg" alt="NovBank Logo">
+      <span class="logo-text lg">NovBank</span>
+    </div>
+    <h1 class="login-tagline">Banking built<br>for you.</h1>
+    <p class="login-sub">Secure, simple, and always available — your money, your way.</p>
+    <div class="login-stats">
+      <div class="stat-pill"><strong>256-bit</strong> Encryption</div>
+      <div class="stat-pill"><strong>24/7</strong> Support</div>
+      <div class="stat-pill"><strong>FDIC</strong> Insured</div>
+    </div>
+  </div>
+
+  <div class="login-right">
+    <div class="login-card">
+      <h2 class="login-card-title" data-i18n="Sign in to your account" data-i18n="Sign in to your account">Sign in to your account</h2>
+      <p class="login-card-sub">Enter your credentials to continue</p>
+
+      {% if error %}
+      <div class="alert alert-error">{{ error }}</div>
+      {% endif %}
+
+      <form method="POST" action="{{ url_for('login') }}">
+        <div class="form-group">
+          <label data-i18n="Email address">Email address</label>
+          <input type="email" name="email" placeholder="you@example.com" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label data-i18n="Password">Password</label>
+          <input type="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn-primary full" data-i18n="Sign In" data-i18n="Sign In">Sign In</button>
+      </form>
+      <div style="text-align:center;margin-top:16px">
+        <a href="{{ url_for('forgot_password') }}" style="font-size:13px;color:var(--blue);text-decoration:none;font-weight:500">Forgot your password?</a>
+      </div>
+
+      <div class="login-demo-hint">
+        <p><strong>Demo credentials:</strong></p>
+        <p>Customer: james@novbank.com / customer123</p>
+        <p>Admin: admin@novbank.com / admin123</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}Edit Customer{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <a href="{{ url_for('admin_customers') }}" style="font-size:13px;color:var(--accent);text-decoration:none">← Back to Customers</a>
+    <h1 class="page-title" style="margin-top:4px">{{ customer['name'] }}</h1>
+    <p class="page-sub">{{ customer['email'] }} · {{ customer['account_number'] }}</p>
+  </div>
+  <div class="header-actions">
+    <form method="POST" action="{{ url_for('admin_toggle_transfer', uid=customer['id']) }}" style="display:inline" onsubmit="return confirm('{{ 'Disable' if customer['transfers_enabled'] else 'Enable' }} transfers for this account?')">
+      {% if customer['transfers_enabled'] %}
+      <button type="submit" class="btn-outline" style="border-color:#0a7c4f;color:#0a7c4f">✓ Transfers On — Disable</button>
+      {% else %}
+      <button type="submit" class="btn-outline">↔ Enable Transfers</button>
+      {% endif %}
+    </form>
+    <form method="POST" action="{{ url_for('admin_freeze', uid=customer['id']) }}" style="display:inline" onsubmit="return confirm('Are you sure you want to {{ 'unfreeze' if customer['frozen'] else 'freeze' }} this account?')">
+      {% if customer['frozen'] %}
+      <button type="submit" class="btn-primary" style="background:#0a7c4f">✓ Unfreeze Account</button>
+      {% else %}
+      <button type="submit" class="btn-danger">❄ Freeze Account</button>
+      {% endif %}
+    </form>
+  </div>
+</div>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+    {% if cat == 'reset_link' %}
+    <div class="alert" style="background:var(--navy-light);color:var(--blue);border:1px solid var(--border);margin-bottom:16px;flex-direction:column;align-items:flex-start;gap:8px">
+      <strong>🔑 Password Reset Link Generated</strong>
+      <span style="font-size:12px;word-break:break-all">Send this link to the customer:</span>
+      <a href="{{ msg }}" style="font-size:12px;color:var(--blue);word-break:break-all">{{ msg }}</a>
+      <span style="font-size:11px;color:var(--text-muted)">⏱ Expires in 24 hours</span>
+    </div>
+    {% else %}
+    <div class="alert alert-{{ 'success' if cat == 'success' else 'error' }}">{{ msg }}</div>
+    {% endif %}
+  {% endfor %}
+{% endwith %}
+{% if customer['frozen'] %}
+<div class="alert alert-error" style="margin-bottom:16px;display:flex;align-items:center;gap:10px">
+  <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;flex-shrink:0"><path d="M22 11h-4.17l3.24-3.24-1.41-1.42L15 11h-2V9l4.66-4.66-1.42-1.41L13 6.17V2h-2v4.17L7.76 2.93 6.34 4.34 11 9v2H9L4.34 6.34 2.93 7.76 6.17 11H2v2h4.17l-3.24 3.24 1.41 1.42L9 13h2v2l-4.66 4.66 1.42 1.41L11 17.83V22h2v-4.17l3.24 3.24 1.42-1.41L13 15v-2h2l4.66 4.66 1.41-1.42L17.83 13H22v-2z"/></svg>
+  This account is currently <strong>frozen</strong>. The customer cannot make withdrawals or transfers.
+</div>
+{% endif %}
+
+<div class="details-grid">
+  <!-- EDIT FORM (admin can change) -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <h2 class="section-card-title">Edit Account</h2>
+    </div>
+    <form method="POST">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" name="name" value="{{ customer['name'] }}" required>
+      </div>
+      <div class="form-group">
+        <label>Account Type</label>
+        <select name="account_type">
+          <option value="Checking" {{ 'selected' if customer['account_type']=='Checking' }}>Checking</option>
+          <option value="Savings" {{ 'selected' if customer['account_type']=='Savings' }}>Savings</option>
+          <option value="Business" {{ 'selected' if customer['account_type']=='Business' }}>Business</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Balance (USD)</label>
+        <div class="input-prefix-wrap">
+          <span class="input-prefix">$</span>
+          <input type="number" name="balance" value="{{ customer['balance'] }}" step="0.01" min="0" required style="padding-left:2rem">
+        </div>
+        <span class="form-hint">Adjusting balance will auto-create a transaction record</span>
+      </div>
+      <div class="form-group">
+        <label>Adjustment Note</label>
+        <input type="text" name="note" placeholder="Reason for adjustment">
+      </div>
+      <button type="submit" class="btn-primary">Save Changes</button>
+    </form>
+  </div>
+
+  <!-- READ-ONLY INFO -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <h2 class="section-card-title">Account Details</h2>
+    </div>
+    <div class="detail-rows">
+      <div class="detail-row">
+        <span class="dr-label">Account Number</span>
+        <span class="dr-value mono">{{ customer['account_number'] }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Routing Number</span>
+        <span class="dr-value mono">{{ customer['routing_number'] }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Current Balance</span>
+        <span class="dr-value strong">${{ "{:,.2f}".format(customer['balance']) }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Phone</span>
+        <span class="dr-value">{{ customer['phone'] or '—' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Address</span>
+        <span class="dr-value">{{ customer['address'] or '—' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Transfers</span>
+        <span class="dr-value">
+          {% if customer['transfers_enabled'] %}
+          <span style="color:#0a7c4f;font-weight:600">✓ Enabled</span>
+          {% else %}
+          <span style="color:#c0392b;font-weight:600">✕ Disabled</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Account Status</span>
+        <span class="dr-value">
+          {% if customer['frozen'] %}
+          <span style="color:#c0392b;font-weight:600">❄ Frozen</span>
+          {% else %}
+          <span style="color:#0a7c4f;font-weight:600">✓ Active</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Member Since</span>
+        <span class="dr-value">{{ customer['created_at'][:10] }}</span>
+      </div>
+    </div>
+    <div style="padding:16px 22px;border-top:1px solid var(--border)">
+      <form method="POST" action="{{ url_for('admin_reset_password', uid=customer['id']) }}"
+            onsubmit="return confirm('Generate a password reset link for {{ customer['name'] }}?')">
+        <button type="submit" class="btn-outline" style="font-size:13px;width:100%">
+          🔑 Generate Password Reset Link
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- TRANSACTION HISTORY -->
+<div class="section-card">
+  <div class="section-card-header">
+    <h2 class="section-card-title">Recent Transactions</h2>
+  </div>
+  {% if txns %}
+  <div class="data-table-wrap"><table class="data-table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Category</th>
+        <th>Type</th>
+        <th style="text-align:right">Amount</th>
+        <th style="text-align:right">Balance After</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in txns %}
+      <tr>
+        <td class="td-date">{{ t['date'][:10] }}</td>
+        <td class="td-desc">{{ t['description'] }}</td>
+        <td><span class="cat-badge">{{ t['category'] }}</span></td>
+        <td><span class="type-badge {{ 'cr' if t['type']=='CR' else 'dr' }}">{{ t['type'] }}</span></td>
+        <td class="td-amount {{ 'cr' if t['type']=='CR' else 'dr' }}">
+          {{ '+' if t['type']=='CR' else '-' }}${{ "{:,.2f}".format(t['amount']) }}
+        </td>
+        <td style="text-align:right">${{ "{:,.2f}".format(t['balance_after']) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <p class="empty-state">No transactions yet.</p>
+  {% endif %}
+</div>
+{% endblock %}
+
+<style>
+.btn-danger { display:inline-flex;align-items:center;justify-content:center;background:var(--red);color:#fff;padding:10px 20px;border-radius:8px;font-size:13.5px;font-weight:500;border:none;cursor:pointer;font-family:var(--font);transition:opacity .15s; }
+.btn-danger:hover { opacity:.88; }
+</style>

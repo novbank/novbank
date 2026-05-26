@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Account Details{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title" data-i18n="Account Details">Account Details</h1>
+    <p class="page-sub">Your account information and card details</p>
+  </div>
+</div>
+
+<!-- CARD VISUAL -->
+<div class="bank-card-visual">
+  <div class="bcv-inner">
+    <div class="bcv-top">
+      <div class="bcv-bank">NovBank</div>
+      <div class="bcv-chip">
+        <div class="chip-line"></div>
+        <div class="chip-line"></div>
+        <div class="chip-line"></div>
+      </div>
+    </div>
+    <div class="bcv-number">{{ user['account_number'] or '•••• •••• •••• ••••' }}</div>
+    <div class="bcv-bottom">
+      <div>
+        <div class="bcv-label">Account Holder</div>
+        <div class="bcv-val">{{ user['name'] }}</div>
+      </div>
+      <div>
+        <div class="bcv-label">Account Type</div>
+        <div class="bcv-val">{{ user['account_type'] }}</div>
+      </div>
+      <div>
+        <div class="bcv-label">Valid Thru</div>
+        <div class="bcv-val">12/30</div>
+      </div>
+    </div>
+  </div>
+  <div class="bcv-deco1"></div>
+  <div class="bcv-deco2"></div>
+</div>
+
+<!-- DETAILS GRID -->
+<div class="details-grid">
+  <div class="section-card">
+    <div class="section-card-header">
+      <h2 class="section-card-title" data-i18n="Account Details">Account Information</h2>
+    </div>
+    <div class="detail-rows">
+      <div class="detail-row">
+        <span class="dr-label">Full Name</span>
+        <span class="dr-value">{{ user['name'] }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Account Number</span>
+        <span class="dr-value mono">{{ user['account_number'] }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Routing Number</span>
+        <span class="dr-value mono">{{ user['routing_number'] }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Account Type</span>
+        <span class="dr-value">{{ user['account_type'] }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Available Balance</span>
+        <span class="dr-value strong">${{ "{:,.2f}".format(user['balance']) }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Member Since</span>
+        <span class="dr-value">{{ user['member_since'][:10] if user['member_since'] else user['created_at'][:10] }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <h2 class="section-card-title">Contact Information</h2>
+    </div>
+    <div class="detail-rows">
+      <div class="detail-row">
+        <span class="dr-label">Email</span>
+        <span class="dr-value">{{ user['email'] }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Phone</span>
+        <span class="dr-value">{{ user['phone'] or '—' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Address</span>
+        <span class="dr-value">{{ user['address'] or '—' }}</span>
+      </div>
+    </div>
+    <div style="margin-top:1.25rem">
+      <a href="{{ url_for('settings') }}" class="btn-outline">Edit Profile</a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

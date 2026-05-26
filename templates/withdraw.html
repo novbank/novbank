@@ -1,0 +1,571 @@
+{% extends "base.html" %}
+{% block title %}Withdraw{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title" data-i18n="Withdraw Funds">Withdraw Funds</h1>
+    <p class="page-sub">Submit a withdrawal request from your account</p>
+  </div>
+</div>
+
+<div class="withdraw-layout">
+
+  <!-- FORM CARD -->
+  <div class="section-card withdraw-form-card">
+
+    {% if message %}
+    <div class="alert alert-success">{{ message }}</div>
+    {% endif %}
+    {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
+
+    <div class="balance-pill">Available Balance: <strong>${{ "{:,.2f}".format(user['balance']) }}</strong></div>
+
+    <form method="POST" id="withdraw-form">
+
+      <div class="form-group">
+        <label>Withdrawal Amount (USD)</label>
+        <div class="input-prefix-wrap">
+          <span class="input-prefix">$</span>
+          <input type="number" name="amount" id="amount" placeholder="0.00" min="1" step="0.01" required style="padding-left:2rem">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label data-i18n="Withdrawal Method">Withdrawal Method</label>
+        <div class="method-cards">
+
+          <label class="method-card active" data-method="ATM">
+            <input type="radio" name="method" value="ATM" checked style="display:none">
+            <div class="mc-icon">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+            </div>
+            <div class="mc-name">ATM</div>
+            <div class="mc-desc">Withdraw at any ATM</div>
+          </label>
+
+          <label class="method-card" data-method="Branch Pickup">
+            <input type="radio" name="method" value="Branch Pickup" style="display:none">
+            <div class="mc-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 2L2 7v2h20V7L12 2zm0 2.24L19.39 7H4.61L12 4.24zM4 11v7H2v2h20v-2h-2v-7h-2v7h-4v-7h-2v7H8v-7H4zm2 0h2v7H6v-7z"/></svg>
+            </div>
+            <div class="mc-name">Branch</div>
+            <div class="mc-desc">Pick up cash at a branch</div>
+          </label>
+
+          <label class="method-card" data-method="Wire Transfer">
+            <input type="radio" name="method" value="Wire Transfer" style="display:none">
+            <div class="mc-icon">
+              <svg viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
+            </div>
+            <div class="mc-name">Wire</div>
+            <div class="mc-desc">Send to another bank</div>
+          </label>
+
+          <label class="method-card" data-method="Certified Check">
+            <input type="radio" name="method" value="Certified Check" style="display:none">
+            <div class="mc-icon">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm-1 14H5c-.55 0-1-.45-1-1V7c0-.55.45-1 1-1h14c.55 0 1 .45 1 1v10c0 .55-.45 1-1 1zM8 9H6v2h2V9zm0 4H6v2h2v-2zm10-4H9v2h9V9zm0 4H9v2h9v-2z"/></svg>
+            </div>
+            <div class="mc-name">Check</div>
+            <div class="mc-desc">Mailed certified check</div>
+          </label>
+
+        </div>
+      </div>
+
+      <!-- ATM FIELDS -->
+      <div class="method-fields active" id="fields-ATM">
+        <div class="fields-heading">ATM Withdrawal Details</div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Debit Card Number (last 4 digits)</label>
+            <input type="text" name="atm_card_last4" placeholder="e.g. 2234" maxlength="4" pattern="[0-9]{4}">
+          </div>
+          <div class="form-group">
+            <label>Preferred ATM Network</label>
+            <select name="atm_network">
+              <option>Any Network</option>
+              <option>Visa / Plus</option>
+              <option>Mastercard / Cirrus</option>
+              <option>Allpoint</option>
+              <option>MoneyPass</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Additional Note <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+          <input type="text" name="atm_note" placeholder="Any specific instructions">
+        </div>
+        <div class="info-box">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          ATM withdrawals are subject to your daily ATM limit. Once approved, funds will be available at any compatible ATM within 1 business day.
+        </div>
+      </div>
+
+      <!-- BRANCH FIELDS -->
+      <div class="method-fields" id="fields-Branch Pickup">
+        <div class="fields-heading">Branch Pickup Details</div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Preferred Branch Location</label>
+            <select name="branch_location">
+              <option>Select a branch...</option>
+              <option>Main Branch — Downtown</option>
+              <option>North Branch — Uptown</option>
+              <option>East Branch — Eastside</option>
+              <option>West Branch — Westpark</option>
+              <option>Airport Branch</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Preferred Pickup Date</label>
+            <input type="date" name="branch_date">
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Government ID Type</label>
+            <select name="branch_id_type">
+              <option>National ID Card</option>
+              <option>Passport</option>
+              <option>Driver's License</option>
+              <option>Voter ID</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>ID Number</label>
+            <input type="text" name="branch_id_number" placeholder="e.g. A123456789">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Full Name on ID</label>
+          <input type="text" name="branch_id_name" placeholder="Must match your government-issued ID" value="{{ user['name'] }}">
+        </div>
+        <div class="info-box">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          You must present your original government-issued ID at the branch. Funds will be held for 3 business days from your requested pickup date.
+        </div>
+      </div>
+
+      <!-- WIRE FIELDS -->
+      <div class="method-fields" id="fields-Wire Transfer">
+        <div class="fields-heading">Wire Transfer Details</div>
+        <div class="wire-notice">
+          <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+          Wire transfers are irreversible. Please double-check all details before submitting.
+        </div>
+        <div class="form-group">
+          <label>Beneficiary Full Name</label>
+          <input type="text" name="wire_beneficiary_name" placeholder="Full legal name of the recipient">
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Recipient Bank Name</label>
+            <input type="text" name="wire_bank_name" placeholder="e.g. Chase Bank, Citibank">
+          </div>
+          <div class="form-group">
+            <label>Recipient Account Number</label>
+            <input type="text" name="wire_account_number" placeholder="e.g. 000123456789">
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Routing Number (ABA)</label>
+            <input type="text" name="wire_routing" placeholder="9-digit routing number" maxlength="9">
+          </div>
+          <div class="form-group">
+            <label>SWIFT / BIC Code <span style="font-weight:400;color:var(--text-muted)">(international)</span></label>
+            <input type="text" name="wire_swift" placeholder="e.g. CHASUS33" maxlength="11">
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Recipient Bank Address</label>
+            <input type="text" name="wire_bank_address" placeholder="Full address of recipient bank">
+          </div>
+          <div class="form-group">
+            <label>Country</label>
+            <select name="wire_country">
+              <option>United States</option>
+              <option>United Kingdom</option>
+              <option>Canada</option>
+              <option>France</option>
+              <option>Germany</option>
+              <option>Nigeria</option>
+              <option>Ghana</option>
+              <option>Benin</option>
+              <option>South Africa</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Purpose of Wire Transfer</label>
+          <select name="wire_purpose">
+            <option>Family Support / Personal</option>
+            <option>Business Payment</option>
+            <option>Investment</option>
+            <option>Property Purchase</option>
+            <option>Education Fees</option>
+            <option>Medical Expenses</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Additional Instructions <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+          <input type="text" name="wire_note" placeholder="Reference number, memo, or special instructions">
+        </div>
+        <div class="info-box">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          Domestic wires: 1 business day. International wires: 2–5 business days. A wire fee may apply depending on your account type.
+        </div>
+      </div>
+
+      <!-- CHECK FIELDS -->
+      <div class="method-fields" id="fields-Certified Check">
+        <div class="fields-heading">Certified Check Details</div>
+        <div class="form-group">
+          <label>Payee Name (Pay to the order of)</label>
+          <input type="text" name="check_payee" placeholder="Full name or business name on the check" value="{{ user['name'] }}">
+        </div>
+        <div class="form-group">
+          <label>Mailing Address (Line 1)</label>
+          <input type="text" name="check_address1" placeholder="Street address" value="{{ user['address'] or '' }}">
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>City</label>
+            <input type="text" name="check_city" placeholder="City">
+          </div>
+          <div class="form-group">
+            <label>State / Region</label>
+            <input type="text" name="check_state" placeholder="State or region">
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>ZIP / Postal Code</label>
+            <input type="text" name="check_zip" placeholder="e.g. 10001">
+          </div>
+          <div class="form-group">
+            <label>Country</label>
+            <input type="text" name="check_country" placeholder="e.g. United States" value="United States">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Memo <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+          <input type="text" name="check_memo" placeholder="What is this check for?">
+        </div>
+        <div class="info-box">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          Certified checks are mailed within 2–3 business days of approval. Delivery may take 5–10 additional days.
+        </div>
+      </div>
+
+      <div style="margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border)">
+        <div class="submit-summary">
+          Submitting a <strong id="sum-method">ATM</strong> withdrawal for <strong id="sum-amount">$0.00</strong>
+        </div>
+        <button type="submit" class="btn-primary full" style="margin-top:12px" data-i18n="Submit Withdrawal Request">Submit Withdrawal Request</button>
+        <p style="font-size:11.5px;color:var(--text-muted);margin-top:10px;text-align:center">
+          Requests are reviewed within 1–2 business days. You will be notified once processed.
+        </p>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- RIGHT SIDEBAR -->
+  <div class="withdraw-tips">
+    <h3 data-i18n="Processing Times">Processing Times</h3>
+
+    <div class="tip-row">
+      <div class="tip-icon">
+        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+      </div>
+      <div class="tip-info">
+        <div class="tip-name">ATM</div>
+        <div class="tip-time">1 business day after approval</div>
+      </div>
+    </div>
+
+    <div class="tip-row">
+      <div class="tip-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7v2h20V7L12 2zm0 2.24L19.39 7H4.61L12 4.24zM4 11v7H2v2h20v-2h-2v-7h-2v7h-4v-7h-2v7H8v-7H4zm2 0h2v7H6v-7z"/></svg>
+      </div>
+      <div class="tip-info">
+        <div class="tip-name">Branch Pickup</div>
+        <div class="tip-time">Same day at selected branch</div>
+      </div>
+    </div>
+
+    <div class="tip-row">
+      <div class="tip-icon">
+        <svg viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
+      </div>
+      <div class="tip-info">
+        <div class="tip-name">Wire Transfer</div>
+        <div class="tip-time">1–5 business days</div>
+      </div>
+    </div>
+
+    <div class="tip-row">
+      <div class="tip-icon">
+        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm-1 14H5c-.55 0-1-.45-1-1V7c0-.55.45-1 1-1h14c.55 0 1 .45 1 1v10c0 .55-.45 1-1 1zM8 9H6v2h2V9zm0 4H6v2h2v-2zm10-4H9v2h9V9zm0 4H9v2h9v-2z"/></svg>
+      </div>
+      <div class="tip-info">
+        <div class="tip-name">Certified Check</div>
+        <div class="tip-time">7–14 business days</div>
+      </div>
+    </div>
+
+    <div class="tip-note">
+      <strong>Important</strong>
+      All requests are subject to review. Funds remain in your account until approved.
+    </div>
+  </div>
+
+</div>
+
+<!-- MY PAST REQUESTS -->
+{% if my_requests %}
+<div class="section-card" style="margin-top:20px">
+  <div class="section-card-header">
+    <h2 class="section-card-title">My Withdrawal Requests</h2>
+  </div>
+  <div class="data-table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Amount</th>
+        <th>Method</th>
+        <th>Note</th>
+        <th>Status</th>
+        <th>Admin Note</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in my_requests %}
+      <tr>
+        <td class="td-date">{{ r['created_at'][:10] }}</td>
+        <td class="td-amount dr">${{ "{:,.2f}".format(r['amount']) }}</td>
+        <td>{{ r['method'] }}</td>
+        <td style="color:var(--text-muted);font-size:12.5px">{{ r['note'] or '—' }}</td>
+        <td>
+          <span class="status-badge {% if r['status']=='Approved' %}status-completed{% elif r['status']=='Rejected' %}status-failed{% else %}status-pending{% endif %}">
+            {{ r['status'] }}
+          </span>
+        </td>
+        <td style="color:var(--text-muted);font-size:12px">{{ r['admin_note'] or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endif %}
+
+<style>
+/* ── LAYOUT ── */
+.withdraw-layout { display:flex; gap:24px; align-items:flex-start; }
+.withdraw-form-card { flex:1; min-width:0; }
+
+/* ── METHOD CARDS ── */
+.method-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+
+.method-card {
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 10px 14px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+  user-select: none;
+}
+.method-card:hover { border-color: var(--accent); background: var(--primary-light); }
+.method-card.active { border-color: var(--accent); background: var(--primary-light); }
+
+.mc-icon {
+  width: 42px;
+  height: 42px;
+  background: var(--primary-light);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.mc-icon svg { width: 22px; height: 22px; fill: var(--accent); }
+.method-card.active .mc-icon { background: rgba(21,88,214,0.18); }
+
+.mc-name { font-size:13px; font-weight:600; color:var(--text); line-height:1; }
+.mc-desc { font-size:10.5px; color:var(--text-muted); line-height:1.4; }
+
+/* ── METHOD FIELDS ── */
+.method-fields { display:none; background:var(--bg); border-radius:10px; padding:18px 16px; margin-top:4px; }
+.method-fields.active { display:block; }
+.fields-heading { font-size:12px; text-transform:uppercase; letter-spacing:.7px; font-weight:600; color:var(--text-muted); margin-bottom:14px; }
+.form-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+
+/* ── INFO / WARNING BOXES ── */
+.info-box { display:flex; gap:9px; background:var(--primary-light); border-radius:8px; padding:11px 14px; margin-top:12px; font-size:12.5px; color:var(--accent); line-height:1.55; }
+.info-box svg { width:16px; height:16px; fill:currentColor; flex-shrink:0; margin-top:1px; }
+.wire-notice { display:flex; gap:9px; background:#fef3c7; border-radius:8px; padding:11px 14px; margin-bottom:14px; font-size:12.5px; color:#92400e; line-height:1.55; border:1px solid #fde68a; }
+.wire-notice svg { width:16px; height:16px; fill:currentColor; flex-shrink:0; margin-top:1px; }
+
+/* ── SUBMIT SUMMARY ── */
+.submit-summary { font-size:13.5px; color:var(--text-muted); background:var(--bg); border-radius:8px; padding:10px 14px; }
+
+/* ── RIGHT SIDEBAR ── */
+.withdraw-tips {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 16px;
+}
+.withdraw-tips h3 {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .7px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.tip-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.tip-icon {
+  width: 34px;
+  height: 34px;
+  background: var(--primary-light);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.tip-icon svg { width: 18px; height: 18px; fill: var(--accent); }
+.tip-info { flex: 1; }
+.tip-name { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.2; }
+.tip-time { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; line-height: 1.3; }
+.tip-note {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+.tip-note strong { color: var(--text); display: block; margin-bottom: 4px; }
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  .withdraw-layout { flex-direction:column; }
+  .withdraw-tips { width:100%; }
+  .method-cards { grid-template-columns:repeat(2,1fr); }
+  .form-row-2 { grid-template-columns:1fr; }
+}
+</style>
+
+<script>
+const methodCards = document.querySelectorAll('.method-card');
+const methodFields = document.querySelectorAll('.method-fields');
+const sumMethod = document.getElementById('sum-method');
+const sumAmount = document.getElementById('sum-amount');
+const amountInput = document.getElementById('amount');
+
+methodCards.forEach(card => {
+  card.addEventListener('click', function() {
+    methodCards.forEach(c => c.classList.remove('active'));
+    methodFields.forEach(f => f.classList.remove('active'));
+    this.classList.add('active');
+    const method = this.dataset.method;
+    document.getElementById('fields-' + method).classList.add('active');
+    sumMethod.textContent = method;
+  });
+});
+
+amountInput.addEventListener('input', function() {
+  const val = parseFloat(this.value) || 0;
+  sumAmount.textContent = '$' + val.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+});
+
+document.getElementById('withdraw-form').addEventListener('submit', function() {
+  const active = document.querySelector('.method-card.active');
+  const method = active ? active.dataset.method : 'ATM';
+  let details = [];
+
+  if (method === 'ATM') {
+    const last4 = document.querySelector('[name=atm_card_last4]').value;
+    const net   = document.querySelector('[name=atm_network]').value;
+    const note  = document.querySelector('[name=atm_note]').value;
+    if (last4) details.push('Card ending: ' + last4);
+    details.push('Network: ' + net);
+    if (note) details.push('Note: ' + note);
+  } else if (method === 'Branch Pickup') {
+    const branch = document.querySelector('[name=branch_location]').value;
+    const date   = document.querySelector('[name=branch_date]').value;
+    const idType = document.querySelector('[name=branch_id_type]').value;
+    const idNum  = document.querySelector('[name=branch_id_number]').value;
+    const idName = document.querySelector('[name=branch_id_name]').value;
+    details.push('Branch: ' + branch);
+    if (date) details.push('Pickup: ' + date);
+    details.push('ID: ' + idType + (idNum ? ' #' + idNum : ''));
+    if (idName) details.push('Name: ' + idName);
+  } else if (method === 'Wire Transfer') {
+    const bene    = document.querySelector('[name=wire_beneficiary_name]').value;
+    const bank    = document.querySelector('[name=wire_bank_name]').value;
+    const acct    = document.querySelector('[name=wire_account_number]').value;
+    const routing = document.querySelector('[name=wire_routing]').value;
+    const swift   = document.querySelector('[name=wire_swift]').value;
+    const country = document.querySelector('[name=wire_country]').value;
+    const purpose = document.querySelector('[name=wire_purpose]').value;
+    const note    = document.querySelector('[name=wire_note]').value;
+    if (bene)    details.push('Beneficiary: ' + bene);
+    if (bank)    details.push('Bank: ' + bank);
+    if (acct)    details.push('Acct: ' + acct);
+    if (routing) details.push('Routing: ' + routing);
+    if (swift)   details.push('SWIFT: ' + swift);
+    details.push('Country: ' + country);
+    details.push('Purpose: ' + purpose);
+    if (note)    details.push('Ref: ' + note);
+  } else if (method === 'Certified Check') {
+    const payee   = document.querySelector('[name=check_payee]').value;
+    const addr1   = document.querySelector('[name=check_address1]').value;
+    const city    = document.querySelector('[name=check_city]').value;
+    const state   = document.querySelector('[name=check_state]').value;
+    const zip     = document.querySelector('[name=check_zip]').value;
+    const country = document.querySelector('[name=check_country]').value;
+    const memo    = document.querySelector('[name=check_memo]').value;
+    if (payee) details.push('Payee: ' + payee);
+    const addr = [addr1,city,state,zip,country].filter(Boolean).join(', ');
+    if (addr) details.push('Mail to: ' + addr);
+    if (memo) details.push('Memo: ' + memo);
+  }
+
+  let hidden = document.getElementById('_note_compiled');
+  if (!hidden) {
+    hidden = document.createElement('input');
+    hidden.type = 'hidden';
+    hidden.id = '_note_compiled';
+    hidden.name = 'note';
+    this.appendChild(hidden);
+  }
+  hidden.value = details.join(' | ');
+});
+</script>
+{% endblock %}

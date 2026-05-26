@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Withdrawal Requests{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Withdrawal Requests</h1>
+    <p class="page-sub">Review and process customer withdrawal requests</p>
+  </div>
+  <div class="header-actions">
+    <div class="filter-counts">
+      <span class="fcount pending">{{ requests|selectattr('status','eq','Pending')|list|length }} Pending</span>
+      <span class="fcount approved">{{ requests|selectattr('status','eq','Approved')|list|length }} Approved</span>
+      <span class="fcount rejected">{{ requests|selectattr('status','eq','Rejected')|list|length }} Rejected</span>
+    </div>
+  </div>
+</div>
+
+<div class="section-card">
+  {% if requests %}
+  <div class="data-table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Customer</th>
+        <th>Account</th>
+        <th>Amount</th>
+        <th>Method</th>
+        <th>Note</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in requests %}
+      <tr>
+        <td class="td-date">{{ r['created_at'][:10] }}</td>
+        <td><strong>{{ r['user_name'] }}</strong></td>
+        <td class="mono" style="font-size:12px">{{ r['account_number'] }}</td>
+        <td class="td-amount dr">${{ "{:,.2f}".format(r['amount']) }}</td>
+        <td>{{ r['method'] }}</td>
+        <td style="color:var(--text-muted);font-size:12px;max-width:120px">{{ r['note'] or '—' }}</td>
+        <td>
+          <span class="status-badge
+            {% if r['status']=='Approved' %}status-completed
+            {% elif r['status']=='Rejected' %}status-failed
+            {% else %}status-pending{% endif %}">
+            {{ r['status'] }}
+          </span>
+        </td>
+        <td>
+          {% if r['status'] == 'Pending' %}
+          <button class="btn-sm-action" onclick="openAction({{ r['id'] }}, '{{ r['user_name'] }}', {{ r['amount'] }})">Review</button>
+          {% else %}
+          <span style="font-size:12px;color:var(--text-muted)">{{ r['admin_note'] or '—' }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="empty-state">No withdrawal requests yet.</p>
+  {% endif %}
+</div>
+
+<!-- ACTION MODAL -->
+<div class="modal-backdrop" id="modal-backdrop" style="display:none">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">Review Withdrawal Request</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <p class="modal-sub" id="modal-desc"></p>
+    <div class="form-group">
+      <label>Admin Note (shown to customer)</label>
+      <input type="text" id="modal-note" placeholder="e.g. Approved — funds released via ATM">
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+      <form id="approve-form" method="POST" style="flex:1">
+        <input type="hidden" name="admin_note" id="approve-note">
+        <button type="submit" class="btn-primary full">✓ Approve</button>
+      </form>
+      <form id="reject-form" method="POST" style="flex:1">
+        <input type="hidden" name="admin_note" id="reject-note">
+        <button type="submit" class="btn-danger full">✕ Reject</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+.filter-counts { display:flex;gap:8px;flex-wrap:wrap; }
+.fcount { font-size:12px;padding:4px 12px;border-radius:20px;font-weight:600; }
+.fcount.pending { background:#fef3c7;color:#92400e; }
+.fcount.approved { background:var(--green-bg);color:var(--green); }
+.fcount.rejected { background:var(--red-bg);color:var(--red); }
+.btn-sm-action { font-size:12px;padding:5px 14px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:var(--font); }
+.btn-sm-action:hover { background:var(--primary-mid); }
+.modal-backdrop { position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px; }
+.modal-card { background:var(--bg-card);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,0.18); }
+.modal-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:6px; }
+.modal-title { font-size:16px;font-weight:600;color:var(--text); }
+.modal-close { background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-muted);line-height:1; }
+.modal-sub { font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.5; }
+</style>
+
+<script>
+function openAction(id, name, amount) {
+  document.getElementById('modal-desc').textContent =
+    name + ' is requesting a withdrawal of $' + amount.toLocaleString('en-US', {minimumFractionDigits:2}) + '. Choose to approve or reject.';
+  document.getElementById('approve-form').action = '/admin/withdrawals/' + id + '/approve';
+  document.getElementById('reject-form').action  = '/admin/withdrawals/' + id + '/reject';
+  document.getElementById('modal-backdrop').style.display = 'flex';
+}
+function closeModal() {
+  document.getElementById('modal-backdrop').style.display = 'none';
+}
+document.getElementById('approve-form').addEventListener('submit', function() {
+  document.getElementById('approve-note').value = document.getElementById('modal-note').value;
+});
+document.getElementById('reject-form').addEventListener('submit', function() {
+  document.getElementById('reject-note').value = document.getElementById('modal-note').value;
+});
+document.getElementById('modal-backdrop').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
+{% endblock %}

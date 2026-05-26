@@ -1,0 +1,474 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Settings</h1>
+    <p class="page-sub">Manage your account preferences</p>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="settings-tabs">
+  <button class="stab active" data-tab="profile">
+    <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+    Profile
+  </button>
+  <button class="stab" data-tab="login">
+    <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+    Login & Security
+  </button>
+  <button class="stab" data-tab="payment">
+    <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+    Payment
+  </button>
+  <button class="stab" data-tab="feedback">
+    <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+    Feedback
+  </button>
+  <button class="stab" data-tab="close">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+    Close Account
+  </button>
+</div>
+
+<!-- TAB: PROFILE -->
+<div class="stab-content active" id="tab-profile">
+  <div class="section-card">
+    <div class="section-card-header">
+      <h2 class="section-card-title" data-i18n="Personal Information">Personal Information</h2>
+    </div>
+
+    <div class="profile-avatar-row">
+      <div class="profile-avatar">{{ user['name'][0] }}</div>
+      <div>
+        <div class="profile-name">{{ user['name'] }}</div>
+        <div class="profile-since">Member since {{ user['member_since'][:10] if user['member_since'] else user['created_at'][:10] }}</div>
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="alert alert-{{ 'success' if cat == 'success' else 'error' }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('update_profile') }}">
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" name="email" value="{{ user['email'] }}" required>
+          <span class="form-hint">Used for login and notifications</span>
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="text" name="phone" value="{{ user['phone'] or '' }}" placeholder="+1 234 567 8900">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Address</label>
+        <input type="text" name="address" value="{{ user['address'] or '' }}" placeholder="Your home address">
+      </div>
+
+      <div class="form-note">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        Your account name can only be changed by visiting a branch or contacting support.
+      </div>
+
+      <button type="submit" class="btn-primary" data-i18n="Save Changes">Save Changes</button>
+    </form>
+  </div>
+
+  <!-- Read-only account info -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <h2 class="section-card-title">Account Details</h2>
+    </div>
+    <div class="detail-rows">
+      <div class="detail-row">
+        <span class="dr-label">Full Name</span>
+        <span class="dr-value">{{ user['name'] }} <span class="locked-badge">Locked</span></span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Account Number</span>
+        <span class="dr-value mono">{{ user['account_number'] }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Routing Number</span>
+        <span class="dr-value mono">{{ user['routing_number'] }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Account Type</span>
+        <span class="dr-value">{{ user['account_type'] }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: LOGIN & SECURITY -->
+<div class="stab-content" id="tab-login">
+  <div class="section-card">
+    <div class="section-card-header">
+      <h2 class="section-card-title">Change Password</h2>
+    </div>
+    <form method="POST" action="{{ url_for('change_password') }}">
+      <div class="form-group">
+        <label>Current Password</label>
+        <input type="password" name="current_password" placeholder="••••••••" required>
+      </div>
+      <div class="form-group">
+        <label>New Password</label>
+        <input type="password" name="new_password" placeholder="••••••••" required minlength="6">
+        <span class="form-hint">Minimum 6 characters</span>
+      </div>
+      <div class="form-group">
+        <label>Confirm New Password</label>
+        <input type="password" name="confirm_password" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn-primary">Update Password</button>
+    </form>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <h2 class="section-card-title">Security Preferences</h2>
+    </div>
+    <div class="pref-row">
+      <div>
+        <div class="pref-label">Two-Factor Authentication</div>
+        <div class="pref-desc">Require a code when signing in from a new device</div>
+      </div>
+      <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="pref-row">
+      <div>
+        <div class="pref-label">Login Alerts</div>
+        <div class="pref-desc">Get notified by email when someone logs into your account</div>
+      </div>
+      <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="pref-row">
+      <div>
+        <div class="pref-label">Biometric Login</div>
+        <div class="pref-desc">Use fingerprint or face ID on supported devices</div>
+      </div>
+      <div class="toggle-switch" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="pref-row">
+      <div>
+        <div class="pref-label">Auto Sign-Out</div>
+        <div class="pref-desc">Automatically sign out after 15 minutes of inactivity</div>
+      </div>
+      <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <h2 class="section-card-title">Active Sessions</h2>
+    </div>
+    <div class="session-row">
+      <div class="session-icon">
+        <svg viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>
+      </div>
+      <div class="session-info">
+        <div class="session-device">This device — Current session</div>
+        <div class="session-meta">{{ request.user_agent.string[:48] if request.user_agent.string else 'Web Browser' }} · Active now</div>
+      </div>
+      <span class="session-active-dot"></span>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: PAYMENT -->
+<div class="stab-content" id="tab-payment">
+  <div class="section-card">
+    <div class="section-card-header">
+      <h2 class="section-card-title">Payment Preferences</h2>
+    </div>
+    <div class="pref-row">
+      <div>
+        <div class="pref-label">Transaction Notifications</div>
+        <div class="pref-desc">Get notified for every debit and credit on your account</div>
+      </div>
+      <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="pref-row">
+      <div>
+        <div class="pref-label">Low Balance Alert</div>
+        <div class="pref-desc">Alert me when balance drops below $100</div>
+      </div>
+      <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="pref-row">
+      <div>
+        <div class="pref-label">Paper Statements</div>
+        <div class="pref-desc">Receive monthly statements by mail</div>
+      </div>
+      <div class="toggle-switch" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="pref-row">
+      <div>
+        <div class="pref-label">Autopay</div>
+        <div class="pref-desc">Automatically pay scheduled bills</div>
+      </div>
+      <div class="toggle-switch" onclick="this.classList.toggle('on')"></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <h2 class="section-card-title">Transfer Limits</h2>
+    </div>
+    <div class="detail-rows">
+      <div class="detail-row">
+        <span class="dr-label">Daily Transfer Limit</span>
+        <span class="dr-value strong">$10,000.00</span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Per Transaction Limit</span>
+        <span class="dr-value strong">$5,000.00</span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Monthly Limit</span>
+        <span class="dr-value strong">$50,000.00</span>
+      </div>
+    </div>
+    <div class="form-note" style="margin-top:1rem">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+      To request a limit increase, please contact support or visit a branch.
+    </div>
+  </div>
+</div>
+
+<!-- TAB: FEEDBACK -->
+<div class="stab-content" id="tab-feedback">
+  <div class="section-card">
+    <div class="section-card-header">
+      <h2 class="section-card-title">Share Your Feedback</h2>
+    </div>
+    <p style="font-size:13.5px;color:var(--text-muted);margin-bottom:1.25rem;line-height:1.6">
+      We value your opinion. Help us improve NovBank by sharing your experience or suggesting new features.
+    </p>
+
+    <div class="rating-row">
+      <span class="rating-label">How would you rate your experience?</span>
+      <div class="stars" id="star-rating">
+        <span class="star" data-val="1">★</span>
+        <span class="star" data-val="2">★</span>
+        <span class="star" data-val="3">★</span>
+        <span class="star" data-val="4">★</span>
+        <span class="star" data-val="5">★</span>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-top:1rem">
+      <label>Category</label>
+      <select id="feedback-cat">
+        <option>General Experience</option>
+        <option>App Performance</option>
+        <option>Account Features</option>
+        <option>Customer Support</option>
+        <option>Feature Request</option>
+        <option>Report a Problem</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Your Message</label>
+      <textarea id="feedback-msg" rows="5" placeholder="Tell us what you think or what you'd like to see..." style="width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font);background:var(--bg);color:var(--text);resize:vertical"></textarea>
+    </div>
+    <button class="btn-primary" onclick="submitFeedback()">Submit Feedback</button>
+    <div id="feedback-success" style="display:none" class="alert alert-success" style="margin-top:1rem">
+      Thank you! Your feedback has been received.
+    </div>
+  </div>
+</div>
+
+<!-- TAB: CLOSE ACCOUNT -->
+<div class="stab-content" id="tab-close">
+  <div class="section-card close-account-card">
+    <div class="close-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+    </div>
+    <h2 class="close-title">Close Your Account</h2>
+    <p class="close-desc">
+      We're sorry to see you go. Before closing your account, please be aware of the following:
+    </p>
+    <ul class="close-list">
+      <li>Any remaining balance will be mailed to your address on file as a certified check</li>
+      <li>All transaction history will be retained for 7 years as required by law</li>
+      <li>Scheduled payments and autopay will be cancelled immediately</li>
+      <li>This action is permanent and cannot be undone</li>
+    </ul>
+
+    <div class="close-alt">
+      <strong>Need help instead?</strong> Before closing, you can:
+      <div class="close-alt-btns">
+        <a href="{{ url_for('dashboard') }}" class="btn-outline">Go to Dashboard</a>
+        <button class="btn-outline" onclick="document.querySelector('[data-tab=feedback]').click()">Contact Support</button>
+      </div>
+    </div>
+
+    <div class="close-confirm-box" id="close-confirm-box" style="display:none">
+      <div class="form-group">
+        <label>Type <strong>CLOSE MY ACCOUNT</strong> to confirm</label>
+        <input type="text" id="close-confirm-input" placeholder="CLOSE MY ACCOUNT">
+      </div>
+      <div class="form-group">
+        <label>Enter your password</label>
+        <input type="password" id="close-confirm-pw" placeholder="••••••••">
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <button class="btn-danger" onclick="confirmClose()">Permanently Close Account</button>
+        <button class="btn-outline" onclick="document.getElementById('close-confirm-box').style.display='none';document.getElementById('close-request-btn').style.display='block'">Cancel</button>
+      </div>
+    </div>
+
+    <button class="btn-danger" id="close-request-btn" onclick="document.getElementById('close-confirm-box').style.display='block';this.style.display='none'">
+      Request Account Closure
+    </button>
+  </div>
+</div>
+
+<style>
+/* SETTINGS TABS */
+.settings-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.settings-tabs::-webkit-scrollbar { display: none; }
+
+.stab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-family: var(--font);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+.stab svg { width: 15px; height: 15px; fill: currentColor; flex-shrink: 0; }
+.stab:hover { background: var(--bg); color: var(--text); }
+.stab.active { background: var(--primary); color: #fff; }
+
+.stab-content { display: none; }
+.stab-content.active { display: block; }
+
+/* PROFILE */
+.profile-avatar-row { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.profile-avatar { width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 20px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.profile-name { font-size: 15px; font-weight: 600; color: var(--text); }
+.profile-since { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.form-note { display: flex; align-items: flex-start; gap: 8px; background: var(--primary-light); border-radius: 8px; padding: 11px 14px; margin: 4px 0 18px; font-size: 12.5px; color: var(--accent); line-height: 1.5; }
+.form-note svg { width: 16px; height: 16px; fill: currentColor; flex-shrink: 0; margin-top: 1px; }
+
+.locked-badge { font-size: 10px; padding: 2px 8px; background: #f3f4f6; color: var(--text-muted); border-radius: 20px; margin-left: 6px; font-weight: 500; border: 1px solid var(--border); }
+
+/* SESSION */
+.session-row { display: flex; align-items: center; gap: 14px; padding: 12px 0; }
+.session-icon { width: 38px; height: 38px; border-radius: 8px; background: var(--primary-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.session-icon svg { width: 20px; height: 20px; fill: var(--accent); }
+.session-info { flex: 1; }
+.session-device { font-size: 13.5px; font-weight: 500; color: var(--text); }
+.session-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
+.session-active-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px var(--green-bg); flex-shrink: 0; }
+
+/* RATING STARS */
+.rating-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.rating-label { font-size: 13.5px; color: var(--text); }
+.stars { display: flex; gap: 4px; }
+.star { font-size: 26px; color: var(--border); cursor: pointer; transition: color 0.1s; line-height: 1; }
+.star.active { color: #f59e0b; }
+
+/* CLOSE ACCOUNT */
+.close-account-card { text-align: center; padding: 36px 28px; }
+.close-icon-wrap { width: 56px; height: 56px; border-radius: 50%; background: var(--red-bg); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+.close-icon-wrap svg { width: 28px; height: 28px; fill: var(--red); }
+.close-title { font-family: var(--font-serif); font-size: 22px; color: var(--text); margin-bottom: 10px; }
+.close-desc { font-size: 13.5px; color: var(--text-muted); max-width: 420px; margin: 0 auto 16px; line-height: 1.6; }
+.close-list { text-align: left; max-width: 420px; margin: 0 auto 20px; display: flex; flex-direction: column; gap: 8px; padding-left: 18px; font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+.close-alt { background: var(--bg); border-radius: 10px; padding: 16px; max-width: 420px; margin: 0 auto 24px; font-size: 13px; color: var(--text-muted); text-align: left; }
+.close-alt strong { color: var(--text); display: block; margin-bottom: 10px; }
+.close-alt-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.close-confirm-box { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 18px; max-width: 420px; margin: 0 auto 16px; text-align: left; }
+.btn-danger { display: inline-flex; align-items: center; justify-content: center; background: var(--red); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 13.5px; font-weight: 500; border: none; cursor: pointer; font-family: var(--font); transition: opacity 0.15s; }
+.btn-danger:hover { opacity: 0.88; }
+
+@media (max-width: 768px) {
+  .stab span, .stab { font-size: 12px; padding: 8px 12px; gap: 5px; }
+  .form-row-2 { grid-template-columns: 1fr; }
+  .rating-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .session-meta { max-width: 180px; }
+}
+</style>
+
+<script>
+// Tab switching
+document.querySelectorAll('.stab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.stab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.stab-content').forEach(c => c.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+  });
+});
+
+// Star rating
+let selectedRating = 0;
+document.querySelectorAll('.star').forEach(star => {
+  star.addEventListener('mouseover', function() {
+    const val = parseInt(this.dataset.val);
+    document.querySelectorAll('.star').forEach((s, i) => {
+      s.classList.toggle('active', i < val);
+    });
+  });
+  star.addEventListener('click', function() {
+    selectedRating = parseInt(this.dataset.val);
+  });
+  star.addEventListener('mouseleave', function() {
+    document.querySelectorAll('.star').forEach((s, i) => {
+      s.classList.toggle('active', i < selectedRating);
+    });
+  });
+});
+
+// Feedback submit
+function submitFeedback() {
+  const msg = document.getElementById('feedback-msg').value.trim();
+  if (!msg) { alert('Please write a message before submitting.'); return; }
+  document.getElementById('feedback-success').style.display = 'block';
+  document.getElementById('feedback-msg').value = '';
+  selectedRating = 0;
+  document.querySelectorAll('.star').forEach(s => s.classList.remove('active'));
+  setTimeout(() => document.getElementById('feedback-success').style.display = 'none', 4000);
+}
+
+// Close account confirm
+function confirmClose() {
+  const input = document.getElementById('close-confirm-input').value.trim();
+  const pw    = document.getElementById('close-confirm-pw').value.trim();
+  if (input !== 'CLOSE MY ACCOUNT') { alert('Please type exactly: CLOSE MY ACCOUNT'); return; }
+  if (!pw) { alert('Please enter your password.'); return; }
+  alert('Your account closure request has been submitted. Our team will contact you within 2 business days.');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% block title %}Add Customer{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <a href="{{ url_for('admin_customers') }}" style="font-size:13px;color:var(--accent);text-decoration:none">← Back to Customers</a>
+    <h1 class="page-title" style="margin-top:4px">Add New Customer</h1>
+    <p class="page-sub">Create a new customer account with optional transaction history</p>
+  </div>
+</div>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<form method="POST" id="add-form">
+
+  <!-- ACCOUNT INFO -->
+  <div class="section-card" style="margin-bottom:16px">
+    <div class="section-card-header">
+      <h2 class="section-card-title">Account Information</h2>
+    </div>
+    <div class="form-row-2">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" name="name" placeholder="John Doe" required>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" placeholder="john@example.com" required>
+      </div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Temporary password" required>
+      </div>
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="text" name="phone" placeholder="+1 234 567 8900">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Address</label>
+      <input type="text" name="address" placeholder="Home address">
+    </div>
+    <div class="form-row-2">
+      <div class="form-group">
+        <label>Account Number</label>
+        <input type="text" name="account_number" placeholder="e.g. 4521 8834 9901 0001" required>
+      </div>
+      <div class="form-group">
+        <label>Account Type</label>
+        <select name="account_type">
+          <option value="Checking">Checking</option>
+          <option value="Savings">Savings</option>
+          <option value="Business">Business</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-group">
+        <label>Member Since</label>
+        <input type="date" name="member_since" value="{{ today }}"
+               max="{{ today }}"
+               title="Set how long this customer has been with the bank">
+        <span class="form-hint">Set the account opening date — can go back years for existing employees</span>
+      </div>
+      <div class="form-group">
+        <label>Quick Set</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:2px">
+          <button type="button" class="qs-btn" onclick="setYearsAgo(1)">1 yr ago</button>
+          <button type="button" class="qs-btn" onclick="setYearsAgo(3)">3 yrs</button>
+          <button type="button" class="qs-btn" onclick="setYearsAgo(5)">5 yrs</button>
+          <button type="button" class="qs-btn" onclick="setYearsAgo(8)">8 yrs</button>
+          <button type="button" class="qs-btn" onclick="setYearsAgo(10)">10 yrs</button>
+          <button type="button" class="qs-btn" onclick="setYearsAgo(11)">11 yrs</button>
+        </div>
+      </div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-group">
+        <label>Opening Balance (USD)</label>
+        <div class="input-prefix-wrap">
+          <span class="input-prefix">$</span>
+          <input type="number" name="balance" placeholder="0.00" min="0" step="0.01" value="0" required style="padding-left:2rem">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Transfer Access</label>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13.5px;cursor:pointer">
+            <input type="checkbox" name="transfers_enabled" value="1" style="width:16px;height:16px;cursor:pointer">
+            Enable fund transfers for this account
+          </label>
+        </div>
+        <span class="form-hint">If unchecked, customer will see the transfer restriction notice</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSACTION HISTORY -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <h2 class="section-card-title">Transaction History</h2>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="btn-outline" style="font-size:12px;padding:6px 14px" onclick="showManual()" id="btn-manual">Manual Entry</button>
+        <button type="button" class="btn-primary" style="font-size:12px;padding:6px 14px" onclick="showAutoGen()" id="btn-auto">✦ Auto-Generate</button>
+      </div>
+    </div>
+
+    <!-- AUTO-GENERATE PANEL -->
+    <div id="autogen-panel" style="padding:0 22px 20px">
+      <div class="autogen-info">
+        <div class="autogen-icon">✦</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px">Auto-Generate Full History</div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.6">
+            Automatically creates realistic transactions from the account opening date to today.
+            Income + expenses for the full history period, then only salary + bank fees for the last 5 months.
+          </div>
+        </div>
+      </div>
+
+      <input type="hidden" name="use_autogen" id="use_autogen" value="1">
+
+      <div class="form-row-2" style="margin-top:16px">
+        <div class="form-group">
+          <label>Worker Profile</label>
+          <select name="autogen_profile" id="autogen_profile">
+            <option value="construction">🏗 Construction Worker</option>
+          </select>
+          <span class="form-hint">More profiles coming soon</span>
+        </div>
+        <div class="autogen-preview" id="autogen-preview">
+          <div class="ap-label">What gets generated:</div>
+          <div class="ap-items">
+            <div class="ap-item green">✓ Monthly salary every month</div>
+            <div class="ap-item green">✓ Random bonuses & reimbursements</div>
+            <div class="ap-item green">✓ Site materials, equipment, transport</div>
+            <div class="ap-item green">✓ Rent, utilities, groceries, meals</div>
+            <div class="ap-item amber">◆ Last 5 months: salary + bank fees only</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MANUAL PANEL -->
+    <div id="manual-panel" style="padding:0 22px 20px;display:none">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">
+        Add transactions manually. Leave empty if not needed.
+      </p>
+      <div id="txn-rows"></div>
+      <div id="txn-empty" style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;border:1px dashed var(--border);border-radius:8px">
+        No transactions added yet. Click <strong>+ Add Transaction</strong> below.
+      </div>
+      <button type="button" class="btn-outline" style="font-size:12px;padding:6px 14px;margin-top:12px" onclick="addTxnRow()">+ Add Transaction</button>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px;margin-top:4px;flex-wrap:wrap">
+    <button type="submit" class="btn-primary">Create Account</button>
+    <a href="{{ url_for('admin_customers') }}" class="btn-outline">Cancel</a>
+  </div>
+</form>
+
+<style>
+.txn-row { display:grid; grid-template-columns:1fr 2fr 80px 100px 120px 36px; gap:8px; align-items:end; padding:12px 0; border-bottom:1px solid var(--border); }
+.txn-row:last-child { border-bottom:none; }
+.txn-row .form-group { margin-bottom:0; }
+.txn-row label { font-size:11px; }
+.txn-row input, .txn-row select { font-size:13px; padding:8px 10px; }
+.txn-remove { width:36px; height:36px; border-radius:6px; background:var(--red-bg); color:var(--red); border:none; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-bottom:0; }
+.txn-remove:hover { background:var(--red); color:#fff; }
+.form-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media(max-width:768px){ .txn-row{grid-template-columns:1fr 1fr;} .form-row-2{grid-template-columns:1fr;} }
+.qs-btn { font-size:11px; padding:5px 10px; background:var(--navy-light); color:var(--blue); border:1px solid var(--border); border-radius:20px; cursor:pointer; font-family:var(--font); font-weight:600; white-space:nowrap; transition:background .12s; }
+.qs-btn:hover { background:var(--blue); color:#fff; }
+.autogen-info { display:flex;gap:14px;align-items:flex-start;background:var(--navy-light);border-radius:var(--r-md);padding:16px;margin-bottom:4px; }
+.autogen-icon { font-size:22px;flex-shrink:0;margin-top:2px; }
+.autogen-preview { background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:14px; }
+.ap-label { font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:var(--text-muted);margin-bottom:10px; }
+.ap-items { display:flex;flex-direction:column;gap:6px; }
+.ap-item { font-size:12.5px;font-weight:500; }
+.ap-item.green { color:var(--green); }
+.ap-item.amber { color:var(--amber); }
+</style>
+
+<script>
+let rowCount = 0;
+const categories = ['General','Income','Shopping','Utilities','Transfer','Cash','Dining','Transport','Healthcare','Education','Entertainment','Construction','Equipment','Materials','Labour'];
+
+function addTxnRow(desc='', amount='', type='CR', cat='General', date='') {
+  rowCount++;
+  document.getElementById('txn-empty').style.display = 'none';
+  const today = new Date().toISOString().split('T')[0];
+  const row = document.createElement('div');
+  row.className = 'txn-row';
+  row.id = 'txn-row-' + rowCount;
+  row.innerHTML = `
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" name="txn_date" value="${date || today}">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <input type="text" name="txn_desc" placeholder="e.g. Salary payment" value="${desc}" required>
+    </div>
+    <div class="form-group">
+      <label>Type</label>
+      <select name="txn_type">
+        <option value="CR" ${type==='CR'?'selected':''}>Credit</option>
+        <option value="DR" ${type==='DR'?'selected':''}>Debit</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Amount ($)</label>
+      <input type="number" name="txn_amount" placeholder="0.00" min="0.01" step="0.01" value="${amount}" required>
+    </div>
+    <div class="form-group">
+      <label>Category</label>
+      <select name="txn_cat">
+        ${categories.map(c => `<option value="${c}" ${c===cat?'selected':''}>${c}</option>`).join('')}
+      </select>
+    </div>
+    <button type="button" class="txn-remove" onclick="removeRow('txn-row-${rowCount}')" title="Remove">✕</button>
+  `;
+  document.getElementById('txn-rows').appendChild(row);
+}
+
+function removeRow(id) {
+  document.getElementById(id).remove();
+  if (document.querySelectorAll('.txn-row').length === 0) {
+    document.getElementById('txn-empty').style.display = 'block';
+  }
+}
+
+// Quick fill templates
+const profiles = {
+  construction: [
+    {desc:'Monthly Salary — Construction Site', amount:3200, type:'CR', cat:'Income', days:1},
+    {desc:'Safety Equipment Purchase', amount:145, type:'DR', cat:'Equipment', days:3},
+    {desc:'Transport to Site — Fuel', amount:60, type:'DR', cat:'Transport', days:5},
+    {desc:'Site Materials — Cement Bags', amount:320, type:'DR', cat:'Materials', days:8},
+    {desc:'Lunch & Meals — Site Canteen', amount:85, type:'DR', cat:'Dining', days:10},
+    {desc:'Overtime Bonus Payment', amount:450, type:'CR', cat:'Income', days:12},
+    {desc:'Power Tools Rental', amount:200, type:'DR', cat:'Equipment', days:15},
+    {desc:'Electricity Bill', amount:48, type:'DR', cat:'Utilities', days:18},
+    {desc:'Labour Payment — Assistant', amount:500, type:'DR', cat:'Labour', days:20},
+    {desc:'Company Reimbursement', amount:320, type:'CR', cat:'Income', days:22},
+  ]
+};
+
+function showManual() {
+  document.getElementById('autogen-panel').style.display = 'none';
+  document.getElementById('manual-panel').style.display = 'block';
+  document.getElementById('use_autogen').value = '';
+  document.getElementById('btn-manual').classList.add('active');
+  document.getElementById('btn-auto').classList.remove('active');
+}
+function showAutoGen() {
+  document.getElementById('autogen-panel').style.display = 'block';
+  document.getElementById('manual-panel').style.display = 'none';
+  document.getElementById('use_autogen').value = '1';
+  document.getElementById('btn-auto').classList.add('active');
+  document.getElementById('btn-manual').classList.remove('active');
+}
+
+function setYearsAgo(years) {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - years);
+  document.querySelector('[name=member_since]').value = d.toISOString().split('T')[0];
+}
+
+function loadProfile(profile) {
+  if (!profiles[profile]) return;
+  document.getElementById('txn-rows').innerHTML = '';
+  document.getElementById('txn-empty').style.display = 'none';
+  rowCount = 0;
+  const now = new Date();
+  profiles[profile].forEach(t => {
+    const d = new Date(now);
+    d.setDate(d.getDate() - t.days);
+    addTxnRow(t.desc, t.amount, t.type, t.cat, d.toISOString().split('T')[0]);
+  });
+}
+</script>
+
+
+{% endblock %}

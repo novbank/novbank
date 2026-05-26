@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Good {{ "morning" if now_hour < 12 else ("afternoon" if now_hour < 17 else "evening") }}, {{ user['name'].split()[0] }}</h1>
+    <p class="page-sub">Here's your financial overview for today</p>
+  </div>
+</div>
+
+<!-- BALANCE HERO -->
+<div class="balance-hero">
+  <div class="balance-hero-left">
+    <div class="balance-label">Available Balance</div>
+    <div class="balance-amount">${{ "{:,.2f}".format(user['balance']) }}</div>
+    <div class="balance-meta">
+      <span class="acct-type-badge">{{ user['account_type'] }}</span>
+      <span class="acct-num">•••• {{ user['account_number'][-4:] if user['account_number'] else '0000' }}</span>
+    </div>
+  </div>
+  <div class="balance-hero-right">
+    {% set credits = namespace(total=0) %}
+    {% set debits  = namespace(total=0) %}
+    {% for t in txns %}
+      {% if t['type']=='CR' %}{% set credits.total = credits.total + t['amount'] %}{% endif %}
+      {% if t['type']=='DR' %}{% set debits.total  = debits.total  + t['amount'] %}{% endif %}
+    {% endfor %}
+    <div class="mini-stat">
+      <div class="mini-stat-label">Month In</div>
+      <div class="mini-stat-value green">+${{ "{:,.2f}".format(credits.total) }}</div>
+    </div>
+    <div class="mini-stat">
+      <div class="mini-stat-label">Month Out</div>
+      <div class="mini-stat-value red">-${{ "{:,.2f}".format(debits.total) }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- QUICK ACTIONS -->
+<div class="quick-actions-grid">
+  <a href="{{ url_for('account') }}" class="qa-card">
+    <div class="qa-icon"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg></div>
+    <span data-i18n="Account">Account</span>
+  </a>
+  <a href="{{ url_for('statement') }}" class="qa-card">
+    <div class="qa-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></div>
+    <span data-i18n="Statement">Statement</span>
+  </a>
+  <a href="{{ url_for('history') }}" class="qa-card">
+    <div class="qa-icon"><svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg></div>
+    <span data-i18n="History">History</span>
+  </a>
+  <a href="{{ url_for('settings') }}" class="qa-card">
+    <div class="qa-icon"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></div>
+    <span data-i18n="Settings">Settings</span>
+  </a>
+</div>
+
+<!-- CHARTS ROW -->
+<div class="charts-row">
+
+  <!-- LINE CHART -->
+  <div class="section-card chart-card">
+    <div class="section-card-header">
+      <div>
+        <h2 class="section-card-title">Cash Flow</h2>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:2px">Income vs Expenses — last 6 months</p>
+      </div>
+      <div class="chart-legend-pills">
+        <span class="clp clp-green">● Income</span>
+        <span class="clp clp-red">● Expenses</span>
+      </div>
+    </div>
+    <div class="chart-body">
+      <canvas id="barChart"></canvas>
+    </div>
+  </div>
+
+  <!-- DONUT CHART -->
+  <div class="section-card chart-card">
+    <div class="section-card-header">
+      <div>
+        <h2 class="section-card-title">Spending Breakdown</h2>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:2px">Where your money goes</p>
+      </div>
+    </div>
+    <div class="chart-body donut-body">
+      <div class="donut-wrap">
+        <canvas id="donutChart"></canvas>
+        <div id="donut-center" class="donut-center"></div>
+      </div>
+      <div id="donut-legend" class="donut-legend-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- RECENT TRANSACTIONS -->
+<div class="section-card">
+  <div class="section-card-header">
+    <h2 class="section-card-title" data-i18n="Recent Transactions">Recent Transactions</h2>
+    <a href="{{ url_for('history') }}" class="see-all" data-i18n="See all">See all</a>
+  </div>
+  {% if txns %}
+  <div class="data-table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Category</th>
+        <th>Status</th>
+        <th style="text-align:right">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in txns %}
+      <tr>
+        <td class="td-date">{{ t['date'][:10] }}</td>
+        <td class="td-desc">{{ t['description'] }}</td>
+        <td><span class="cat-badge">{{ t['category'] }}</span></td>
+        <td><span class="status-badge status-{{ t['status'].lower() }}">{{ t['status'] }}</span></td>
+        <td class="td-amount {{ 'cr' if t['type']=='CR' else 'dr' }}">
+          {{ '+' if t['type']=='CR' else '-' }}${{ "{:,.2f}".format(t['amount']) }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="empty-state">No recent transactions.</p>
+  {% endif %}
+</div>
+
+<style>
+.charts-row { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
+.chart-card { margin-bottom:0; }
+.chart-body { padding:8px 22px 24px; position:relative; }
+.donut-body { display:flex; align-items:center; gap:20px; flex-wrap:wrap; padding:12px 22px 24px; }
+.donut-wrap { position:relative; width:160px; height:160px; flex-shrink:0; margin:0 auto; }
+.donut-center {
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  text-align:center; pointer-events:none;
+}
+.donut-legend-list { flex:1; min-width:130px; display:flex; flex-direction:column; gap:10px; }
+.chart-legend-pills { display:flex; gap:10px; align-items:center; }
+.clp { font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:20px; }
+.clp-green { background:#ecfdf5; color:#065f46; }
+.clp-red { background:#fef2f2; color:#991b1b; }
+.dleg-row { display:flex; align-items:center; gap:10px; }
+.dleg-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.dleg-name { font-size:12.5px; font-weight:600; color:var(--text); }
+.dleg-amt { font-size:11.5px; color:var(--text-muted); }
+.dleg-bar-wrap { height:3px; background:var(--border); border-radius:3px; margin-top:3px; }
+.dleg-bar { height:3px; border-radius:3px; }
+@media(max-width:768px){
+  .charts-row { grid-template-columns:1fr; }
+  .donut-body { flex-direction:column; align-items:center; }
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const monthsData = {{ months_data|safe }};
+const catData    = {{ cat_data|safe }};
+
+// Register gradient plugin
+Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+
+// ── LINE CHART ──────────────────────────────────
+const barCtx = document.getElementById('barChart').getContext('2d');
+
+const greenGrad = barCtx.createLinearGradient(0, 0, 0, 220);
+greenGrad.addColorStop(0, 'rgba(16,185,129,0.18)');
+greenGrad.addColorStop(1, 'rgba(16,185,129,0)');
+
+const redGrad = barCtx.createLinearGradient(0, 0, 0, 220);
+redGrad.addColorStop(0, 'rgba(239,68,68,0.13)');
+redGrad.addColorStop(1, 'rgba(239,68,68,0)');
+
+new Chart(barCtx, {
+  type: 'line',
+  data: {
+    labels: monthsData.map(d => d.month),
+    datasets: [
+      {
+        label: 'Income',
+        data: monthsData.map(d => d.income),
+        borderColor: '#10b981',
+        backgroundColor: greenGrad,
+        borderWidth: 2.5,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#10b981',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointHoverBackgroundColor: '#10b981',
+        fill: true,
+        tension: 0.42,
+      },
+      {
+        label: 'Expenses',
+        data: monthsData.map(d => d.expenses),
+        borderColor: '#ef4444',
+        backgroundColor: redGrad,
+        borderWidth: 2.5,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#ef4444',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointHoverBackgroundColor: '#ef4444',
+        fill: true,
+        tension: 0.42,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#0a2342',
+        titleColor: 'rgba(255,255,255,0.7)',
+        bodyColor: '#fff',
+        padding: 12,
+        cornerRadius: 10,
+        displayColors: true,
+        callbacks: {
+          label: ctx => '  ' + ctx.dataset.label + ':  $' + ctx.parsed.y.toLocaleString('en-US', {minimumFractionDigits:2})
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        border: { display: false },
+        ticks: { color: '#6b7280', font: { size: 12 } }
+      },
+      y: {
+        grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false },
+        border: { display: false, dash: [4,4] },
+        ticks: {
+          color: '#6b7280',
+          font: { size: 11 },
+          callback: v => '$' + (v >= 1000 ? (v/1000).toFixed(0)+'k' : v)
+        }
+      }
+    }
+  }
+});
+
+// ── DONUT CHART ──────────────────────────────────
+const palette = ['#0a2342','#1a56db','#10b981','#f59e0b','#ef4444','#8b5cf6'];
+const donutCtx = document.getElementById('donutChart').getContext('2d');
+const total = catData.reduce((s, d) => s + d.total, 0);
+
+if (catData.length > 0) {
+  new Chart(donutCtx, {
+    type: 'doughnut',
+    data: {
+      labels: catData.map(d => d.cat),
+      datasets: [{
+        data: catData.map(d => d.total),
+        backgroundColor: palette.slice(0, catData.length),
+        borderWidth: 3,
+        borderColor: '#ffffff',
+        hoverBorderWidth: 4,
+        hoverOffset: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      cutout: '72%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0a2342',
+          titleColor: 'rgba(255,255,255,0.7)',
+          bodyColor: '#fff',
+          padding: 12,
+          cornerRadius: 10,
+          callbacks: {
+            label: ctx => '  $' + ctx.parsed.toLocaleString('en-US', {minimumFractionDigits:2}) +
+                          '  (' + ((ctx.parsed/total)*100).toFixed(1) + '%)'
+          }
+        }
+      },
+      onHover: (evt, elements) => {
+        const center = document.getElementById('donut-center');
+        if (elements.length > 0) {
+          const i = elements[0].index;
+          const pct = ((catData[i].total/total)*100).toFixed(1);
+          center.innerHTML = `<div style="font-size:18px;font-weight:700;color:var(--navy)">${pct}%</div><div style="font-size:11px;color:var(--text-muted)">${catData[i].cat}</div>`;
+        } else {
+          const pct = ((total/total)*100).toFixed(0);
+          center.innerHTML = `<div style="font-size:15px;font-weight:700;color:var(--navy)">$${(total/1000).toFixed(1)}k</div><div style="font-size:11px;color:var(--text-muted)">Total</div>`;
+        }
+      }
+    }
+  });
+
+  // Center label default
+  const center = document.getElementById('donut-center');
+  center.innerHTML = `<div style="font-size:15px;font-weight:700;color:var(--navy)">$${total >= 1000 ? (total/1000).toFixed(1)+'k' : total.toFixed(0)}</div><div style="font-size:11px;color:var(--text-muted)">Total</div>`;
+
+  // Custom legend with mini bars
+  const legend = document.getElementById('donut-legend');
+  catData.forEach((d, i) => {
+    const pct = total > 0 ? ((d.total/total)*100).toFixed(1) : '0';
+    legend.innerHTML += `
+      <div class="dleg-row">
+        <div class="dleg-dot" style="background:${palette[i]}"></div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span class="dleg-name">${d.cat}</span>
+            <span class="dleg-amt">${pct}%</span>
+          </div>
+          <div class="dleg-bar-wrap">
+            <div class="dleg-bar" style="width:${pct}%;background:${palette[i]}"></div>
+          </div>
+        </div>
+      </div>`;
+  });
+} else {
+  document.querySelector('.donut-body').innerHTML =
+    '<p style="text-align:center;color:var(--text-muted);font-size:13px;padding:32px">No spending data yet</p>';
+}
+</script>
+{% endblock %}

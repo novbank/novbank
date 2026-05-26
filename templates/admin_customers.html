@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Customers{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Customers</h1>
+    <p class="page-sub">Manage all customer accounts</p>
+  </div>
+  <div class="header-actions">
+    <input type="text" id="cust-search" placeholder="Search customers..." style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--bg);color:var(--text);width:220px">
+    <a href="{{ url_for('admin_add_customer') }}" class="btn-primary">+ Add Customer</a>
+  </div>
+</div>
+
+<div class="section-card">
+  <div class="data-table-wrap"><table class="data-table" id="cust-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Account Number</th>
+        <th>Type</th>
+        <th style="text-align:right">Balance</th>
+        <th>Joined</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in customers %}
+      <tr>
+        <td><strong>{{ c['name'] }}</strong></td>
+        <td>{{ c['email'] }}</td>
+        <td class="mono">{{ c['account_number'] }}</td>
+        <td><span class="cat-badge">{{ c['account_type'] }}</span></td>
+        <td class="td-amount" style="text-align:right">${{ "{:,.2f}".format(c['balance']) }}</td>
+        <td class="td-date">{{ c['created_at'][:10] }}</td>
+        <td>
+          <a href="{{ url_for('admin_edit_customer', uid=c['id']) }}" class="btn-outline" style="padding:4px 12px;font-size:12px">Manage</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+
+<script>
+document.getElementById('cust-search').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#cust-table tbody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+{% endblock %}
