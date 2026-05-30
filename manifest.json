@@ -1,0 +1,33 @@
+{
+  "name": "NovBank",
+  "short_name": "NovBank",
+  "description": "Your secure digital banking experience",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a2342",
+  "theme_color": "#0a2342",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "business"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/dashboard",
+      "description": "View your account dashboard"
+    }
+  ]
+}

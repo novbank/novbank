@@ -118,7 +118,7 @@ html, body {
 .logo-text {
   font-family: var(--font-serif);
   font-size: 18px;
-  color: var(--navy);
+  color: bisque;
   font-weight: 400;
   letter-spacing: 0.2px;
 }
@@ -587,6 +587,7 @@ html, body {
   font-family: var(--font);
   letter-spacing: 0.2px;
   box-shadow: 0 2px 8px rgba(10,35,66,0.18);
+  margin-left: 1rem;
 }
 .btn-primary:hover { background: var(--navy-mid); box-shadow: 0 4px 14px rgba(10,35,66,0.24); }
 .btn-primary:active { transform: scale(0.98); }
@@ -608,6 +609,7 @@ html, body {
   text-decoration: none;
   transition: background 0.15s, border-color 0.15s;
   font-family: var(--font);
+  margin: 0 0 16px 22px;
 }
 .btn-outline:hover { background: var(--bg); border-color: var(--navy); }
 

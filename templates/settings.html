@@ -248,11 +248,11 @@
     <div class="section-card-header">
       <h2 class="section-card-title">Share Your Feedback</h2>
     </div>
-    <p style="font-size:13.5px;color:var(--text-muted);margin-bottom:1.25rem;line-height:1.6">
+    <p style="font-size:13.5px;color:var(--text-muted);padding:1.25rem;line-height:1.6">
       We value your opinion. Help us improve NovBank by sharing your experience or suggesting new features.
     </p>
 
-    <div class="rating-row">
+    <div class="rating-row" style="padding:1.25rem;">
       <span class="rating-label">How would you rate your experience?</span>
       <div class="stars" id="star-rating">
         <span class="star" data-val="1">★</span>
@@ -263,7 +263,7 @@
       </div>
     </div>
 
-    <div class="form-group" style="margin-top:1rem">
+    <div class="form-group" style="padding:1rem;">
       <label>Category</label>
       <select id="feedback-cat">
         <option>General Experience</option>
@@ -274,11 +274,11 @@
         <option>Report a Problem</option>
       </select>
     </div>
-    <div class="form-group">
+    <div class="form-group" style="padding:1rem; padding-bottom: 0;" >
       <label>Your Message</label>
       <textarea id="feedback-msg" rows="5" placeholder="Tell us what you think or what you'd like to see..." style="width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font);background:var(--bg);color:var(--text);resize:vertical"></textarea>
     </div>
-    <button class="btn-primary" onclick="submitFeedback()">Submit Feedback</button>
+    <button class="btn-primary" onclick="submitFeedback()" style="padding-left: 1rem; margin-bottom: 1rem;">Submit Feedback</button>
     <div id="feedback-success" style="display:none" class="alert alert-success" style="margin-top:1rem">
       Thank you! Your feedback has been received.
     </div>
@@ -365,14 +365,14 @@
 }
 .stab svg { width: 15px; height: 15px; fill: currentColor; flex-shrink: 0; }
 .stab:hover { background: var(--bg); color: var(--text); }
-.stab.active { background: var(--primary); color: #fff; }
+.stab.active { background: var(--primary); color: #000; }
 
 .stab-content { display: none; }
 .stab-content.active { display: block; }
 
 /* PROFILE */
-.profile-avatar-row { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-.profile-avatar { width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 20px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.profile-avatar-row { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding: 20px; border-bottom: 1px solid var(--border); }
+.profile-avatar { width: 52px; height: 52px; border-radius: 50%; background: rgb(38, 20, 137); color: #fff; font-size: 20px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .profile-name { font-size: 15px; font-weight: 600; color: var(--text); }
 .profile-since { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
