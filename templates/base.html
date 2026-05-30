@@ -153,10 +153,6 @@
         <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
         <span data-i18n="Account">Account</span>
       </a>
-      <a href="{{ url_for('history') }}" class="mbn-item {% if request.endpoint == 'history' %}active{% endif %}">
-        <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
-        <span data-i18n="History">History</span>
-      </a>
       <a href="{{ url_for('withdraw') }}" class="mbn-item {% if request.endpoint == 'withdraw' %}active{% endif %}">
         <svg viewBox="0 0 24 24"><path d="M11 17h2v-1h1c.55 0 1-.45 1-1v-3c0-.55-.45-1-1-1h-3v-1h4v-2h-2V7h-2v1h-1c-.55 0-1 .45-1 1v3c0 .55.45 1 1 1h3v1H9v2h2v1zm9-13H4c-1.11 0-2 .89-2 2v14c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 16H4V6h16v14z"/></svg>
         <span data-i18n="Withdraw">Withdraw</span>
@@ -164,11 +160,6 @@
       <a href="{{ url_for('transfer') }}" class="mbn-item {% if request.endpoint == 'transfer' %}active{% endif %}">
         <svg viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
         <span data-i18n="Transfer">Transfer</span>
-      </a>
-      <a href="{{ url_for('settings') }}" class="mbn-item {% if request.endpoint == 'settings' %}active{% endif %}">
-      <a href="{{ url_for('settings') }}" class="mbn-item {% if request.endpoint == 'settings' %}active{% endif %}">
-        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-        <span data-i18n="Settings">Settings</span>
       </a>
     {% endif %}
   </nav>
@@ -199,10 +190,10 @@
     <img src="{{ url_for('static', filename='logo.png') }}" class="pwa-prompt-logo" alt="NovBank">
     <div class="pwa-prompt-text">
       <div class="pwa-prompt-title">Install NovBank</div>
-      <div class="pwa-prompt-sub">Add to your home screen for the best experience</div>
+      <div class="pwa-prompt-sub" id="pwa-prompt-sub">Add to your home screen for the best experience</div>
     </div>
     <div class="pwa-prompt-actions">
-      <button onclick="installPWA()" class="pwa-install-btn">Install</button>
+      <button onclick="installPWA()" class="pwa-install-btn" id="pwa-install-btn">Install</button>
       <button onclick="dismissInstall()" class="pwa-dismiss-btn">✕</button>
     </div>
   </div>
@@ -236,26 +227,51 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── PWA INSTALL PROMPT ────────────────────────
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  if (!localStorage.getItem('pwa_dismissed')) {
-    setTimeout(() => {
-      document.getElementById('pwa-install-prompt').style.display = 'flex';
+(function() {
+  // Don't show if already installed or dismissed
+  if (localStorage.getItem('pwa_dismissed')) return;
+
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (isInStandaloneMode) return; // already installed
+
+  var prompt = document.getElementById('pwa-install-prompt');
+  var subText = document.getElementById('pwa-prompt-sub');
+  var installBtn = document.getElementById('pwa-install-btn');
+
+  if (isIOS) {
+    // iPhone: show manual instructions after 3s
+    if (subText) subText.textContent = 'Tap the Share button then "Add to Home Screen"';
+    if (installBtn) installBtn.style.display = 'none';
+    setTimeout(function() {
+      if (prompt) prompt.style.display = 'flex';
     }, 3000);
+  } else {
+    // Android Chrome: wait for beforeinstallprompt
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      window._deferredPrompt = e;
+      if (subText) subText.textContent = 'Install NovBank for the best experience';
+      if (installBtn) installBtn.style.display = '';
+      setTimeout(function() {
+        if (prompt) prompt.style.display = 'flex';
+      }, 3000);
+    });
   }
-});
+})();
 
 function installPWA() {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  deferredPrompt.userChoice.then(choice => {
-    if (choice.outcome === 'accepted') {
-      document.getElementById('pwa-install-prompt').style.display = 'none';
-    }
-    deferredPrompt = null;
-  });
+  if (window._deferredPrompt) {
+    window._deferredPrompt.prompt();
+    window._deferredPrompt.userChoice.then(function(choice) {
+      if (choice.outcome === 'accepted') {
+        document.getElementById('pwa-install-prompt').style.display = 'none';
+      }
+      window._deferredPrompt = null;
+    });
+  } else {
+    document.getElementById('pwa-install-prompt').style.display = 'none';
+  }
 }
 
 function dismissInstall() {
