@@ -20,7 +20,7 @@
     {% endif %}
 
     <div class="balance-pill">
-      Available: <strong>${{ "{:,.2f}".format(user['balance']) }}</strong>
+      Available: <strong>{{ user['currency_symbol'] or '$' }}{{ "{:,.2f}".format(user['balance']) }}</strong>
     </div>
 
     <form method="POST">

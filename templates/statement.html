@@ -50,9 +50,9 @@
         <td><span class="cat-badge">{{ t['category'] }}</span></td>
         <td><span class="type-badge {{ 'cr' if t['type']=='CR' else 'dr' }}">{{ t['type'] }}</span></td>
         <td class="td-amount {{ 'cr' if t['type']=='CR' else 'dr' }}">
-          {{ '+' if t['type']=='CR' else '-' }}${{ "{:,.2f}".format(t['amount']) }}
+          {{ '+' if t['type']=='CR' else '-' }}{{ user['currency_symbol'] or '$' }}{{ "{:,.2f}".format(t['amount']) }}
         </td>
-        <td class="td-amount" style="text-align:right">${{ "{:,.2f}".format(t['balance_after']) }}</td>
+        <td class="td-amount" style="text-align:right">{{ user['currency_symbol'] or '$' }}{{ "{:,.2f}".format(t['balance_after']) }}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -62,7 +62,7 @@
         <td class="td-amount" style="text-align:right;font-weight:600">
           {% set total = namespace(v=0) %}
           {% for t in txns %}{% if t['type']=='CR' %}{% set total.v = total.v + t['amount'] %}{% else %}{% set total.v = total.v - t['amount'] %}{% endif %}{% endfor %}
-          <span class="{{ 'cr' if total.v >= 0 else 'dr' }}">${{ "{:,.2f}".format(total.v|abs) }}</span>
+          <span class="{{ 'cr' if total.v >= 0 else 'dr' }}">{{ user['currency_symbol'] or '$' }}{{ "{:,.2f}".format(total.v|abs) }}</span>
         </td>
         <td></td>
       </tr>

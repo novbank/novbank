@@ -21,7 +21,7 @@
     <div class="alert alert-error">{{ error }}</div>
     {% endif %}
 
-    <div class="balance-pill">Available Balance: <strong>${{ "{:,.2f}".format(user['balance']) }}</strong></div>
+    <div class="balance-pill">Available Balance: <strong>{{ user['currency_symbol'] or '$' }}{{ "{:,.2f}".format(user['balance']) }}</strong></div>
 
     <form method="POST" id="withdraw-form">
 
@@ -352,7 +352,7 @@
       {% for r in my_requests %}
       <tr>
         <td class="td-date">{{ r['created_at'][:10] }}</td>
-        <td class="td-amount dr">${{ "{:,.2f}".format(r['amount']) }}</td>
+        <td class="td-amount dr">{{ user['currency_symbol'] or '$' }}{{ "{:,.2f}".format(r['amount']) }}</td>
         <td>{{ r['method'] }}</td>
         <td style="color:var(--text-muted);font-size:12.5px">{{ r['note'] or '—' }}</td>
         <td>
@@ -403,8 +403,6 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin-inline: auto;
-  margin-bottom: 10px;
 }
 .mc-icon svg { width: 22px; height: 22px; fill: var(--accent); }
 .method-card.active .mc-icon { background: rgba(21,88,214,0.18); }

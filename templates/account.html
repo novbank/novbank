@@ -65,7 +65,7 @@
       </div>
       <div class="detail-row">
         <span class="dr-label">Available Balance</span>
-        <span class="dr-value strong">${{ "{:,.2f}".format(user['balance']) }}</span>
+        <span class="dr-value strong">{{ user['currency_symbol'] or '$' }}{{ "{:,.2f}".format(user['balance']) }}</span>
       </div>
       <div class="detail-row">
         <span class="dr-label">Member Since</span>

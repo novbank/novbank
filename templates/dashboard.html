@@ -29,11 +29,11 @@
     {% endfor %}
     <div class="mini-stat">
       <div class="mini-stat-label">Month In</div>
-      <div class="mini-stat-value green">+${{ "{:,.2f}".format(credits.total) }}</div>
+      <div class="mini-stat-value green">+{{ user['currency_symbol'] or '$' }}{{ "{:,.2f}".format(credits.total) }}</div>
     </div>
     <div class="mini-stat">
       <div class="mini-stat-label">Month Out</div>
-      <div class="mini-stat-value red">-${{ "{:,.2f}".format(debits.total) }}</div>
+      <div class="mini-stat-value red">-{{ user['currency_symbol'] or '$' }}{{ "{:,.2f}".format(debits.total) }}</div>
     </div>
   </div>
 </div>
