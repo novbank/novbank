@@ -264,16 +264,16 @@ def admin_required(f):
 @app.context_processor
 def inject_avatar():
     avatar = ""
-    if "user_id" in session:
+    if session.get("user_id"):
         try:
             con = get_db()
             cur = con.cursor()
             cur.execute("SELECT avatar FROM users WHERE id=%s", (session["user_id"],))
             row = cur.fetchone()
             con.close()
-            if row and row["avatar"]:
+            if row and row.get("avatar"):
                 avatar = row["avatar"]
-        except:
+        except Exception:
             pass
     return dict(current_avatar=avatar)
 
