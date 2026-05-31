@@ -770,7 +770,7 @@ html, body {
   border-radius: 20px;
   font-size: 13.5px;
   color: var(--blue);
-  margin-bottom: 22px;
+  margin: 22px;
   font-weight: 500;
 }
 
