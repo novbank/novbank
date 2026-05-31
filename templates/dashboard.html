@@ -13,10 +13,11 @@
 <div class="balance-hero">
   <div class="balance-hero-left">
     <div class="balance-label">Available Balance</div>
-    <div class="balance-amount" data-usd="{{ user['balance'] }}">${{ "{:,.2f}".format(user['balance']) }}</div>
+    <div class="balance-amount">{{ user['currency_symbol'] or '$' }}{{ "{:,.2f}".format(user['balance']) }}</div>
     <div class="balance-meta">
       <span class="acct-type-badge">{{ user['account_type'] }}</span>
       <span class="acct-num">•••• {{ user['account_number'][-4:] if user['account_number'] else '0000' }}</span>
+      <span class="acct-type-badge" style="background:var(--navy-light);color:var(--navy)">{{ user['currency'] or 'USD' }}</span>
     </div>
   </div>
   <div class="balance-hero-right">
@@ -28,11 +29,11 @@
     {% endfor %}
     <div class="mini-stat">
       <div class="mini-stat-label">Month In</div>
-      <div class="mini-stat-value green" data-usd="{{ credits.total }}">+${{ "{:,.2f}".format(credits.total) }}</div>
+      <div class="mini-stat-value green">+${{ "{:,.2f}".format(credits.total) }}</div>
     </div>
     <div class="mini-stat">
       <div class="mini-stat-label">Month Out</div>
-      <div class="mini-stat-value red" data-usd="{{ debits.total }}">-${{ "{:,.2f}".format(debits.total) }}</div>
+      <div class="mini-stat-value red">-${{ "{:,.2f}".format(debits.total) }}</div>
     </div>
   </div>
 </div>

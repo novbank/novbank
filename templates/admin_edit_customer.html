@@ -127,9 +127,39 @@
         </span>
       </div>
       <div class="detail-row">
+        <span class="dr-label">Account Currency</span>
+        <span class="dr-value"><strong>{{ customer['currency'] or 'USD' }}</strong> {{ customer['currency_symbol'] or '$' }}</span>
+      </div>
+      <div class="detail-row">
         <span class="dr-label">Member Since</span>
         <span class="dr-value">{{ customer['created_at'][:10] }}</span>
       </div>
+    </div>
+
+    <!-- CURRENCY CHANGE -->
+    <div style="padding:16px 22px;border-top:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Change Account Currency</div>
+      <form method="POST" action="{{ url_for('admin_change_currency', uid=customer['id']) }}"
+            onsubmit="return confirm('This will convert the balance from {{ customer[\'currency\'] or \'USD\' }} to the selected currency using live rates. Continue?')">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <select name="currency" style="flex:1;min-width:140px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--bg);color:var(--text)">
+            {% set currencies = [
+              ('USD','$ US Dollar'),('EUR','€ Euro'),('GBP','£ British Pound'),
+              ('JPY','¥ Japanese Yen'),('CAD','C$ Canadian Dollar'),('AUD','A$ Australian Dollar'),
+              ('CHF','Fr Swiss Franc'),('CNY','¥ Chinese Yuan'),('INR','₹ Indian Rupee'),
+              ('NGN','₦ Nigerian Naira'),('XOF','CFA West African CFA'),('GHS','₵ Ghanaian Cedi'),
+              ('KES','Ksh Kenyan Shilling'),('ZAR','R South African Rand'),('BRL','R$ Brazilian Real'),
+              ('MXN','MX$ Mexican Peso'),('AED','د.إ UAE Dirham'),('SAR','﷼ Saudi Riyal'),
+              ('SGD','S$ Singapore Dollar'),('HKD','HK$ Hong Kong Dollar')
+            ] %}
+            {% for code, label in currencies %}
+            <option value="{{ code }}" {{ 'selected' if (customer['currency'] or 'USD') == code }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn-primary" style="white-space:nowrap">Convert & Save</button>
+        </div>
+        <span class="form-hint" style="margin-top:6px;display:block">Uses live exchange rates. Balance will be converted and stored in new currency.</span>
+      </form>
     </div>
     <div style="padding:16px 22px;border-top:1px solid var(--border)">
       <form method="POST" action="{{ url_for('admin_reset_password', uid=customer['id']) }}"

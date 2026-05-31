@@ -138,8 +138,18 @@ def init_db():
         frozen INTEGER DEFAULT 0,
         transfers_enabled INTEGER DEFAULT 0,
         member_since TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        currency TEXT DEFAULT 'USD',
+        currency_symbol TEXT DEFAULT '$'
     )""")
+
+    # Migration: add currency columns if they don't exist yet
+    cur.execute("""
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'USD'
+    """)
+    cur.execute("""
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS currency_symbol TEXT DEFAULT '$'
+    """)
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS transactions (
@@ -755,6 +765,60 @@ def withdraw():
     return render_template("withdraw.html", user=user, message=message, error=error, my_requests=my_requests)
 
 
+# ─── ADMIN CHANGE CURRENCY ──────────────────────────────────
+CURRENCY_SYMBOLS = {
+    'USD':'$','EUR':'€','GBP':'£','JPY':'¥','CAD':'C$','AUD':'A$',
+    'CHF':'Fr','CNY':'¥','INR':'₹','NGN':'₦','XOF':'CFA','GHS':'₵',
+    'KES':'Ksh','ZAR':'R','BRL':'R$','MXN':'MX$','AED':'د.إ',
+    'SAR':'﷼','SGD':'S$','HKD':'HK$'
+}
+
+@app.route("/admin/change_currency/<int:uid>", methods=["POST"])
+@login_required
+@admin_required
+def admin_change_currency(uid):
+    import urllib.request, json
+    from flask import flash
+    new_currency = request.form.get("currency", "USD").upper()
+    if new_currency not in CURRENCY_SYMBOLS:
+        flash("Invalid currency.", "error")
+        return redirect(url_for("admin_edit_customer", uid=uid))
+
+    con = get_db()
+    cur = con.cursor()
+    cur.execute("SELECT balance, currency FROM users WHERE id=%s", (uid,))
+    user = cur.fetchone()
+    old_currency = user["currency"] or "USD"
+    old_balance  = user["balance"] or 0
+
+    try:
+        # Fetch live rates from open.er-api.com (free, no key)
+        url = f"https://open.er-api.com/v6/latest/{old_currency}"
+        with urllib.request.urlopen(url, timeout=5) as resp:
+            data = json.loads(resp.read())
+        rate = data["rates"].get(new_currency, 1)
+    except Exception:
+        flash("Could not fetch live exchange rate. Please try again.", "error")
+        con.close()
+        return redirect(url_for("admin_edit_customer", uid=uid))
+
+    new_balance = round(old_balance * rate, 2)
+    new_symbol  = CURRENCY_SYMBOLS[new_currency]
+
+    cur.execute(
+        "UPDATE users SET balance=%s, currency=%s, currency_symbol=%s WHERE id=%s",
+        (new_balance, new_currency, new_symbol, uid)
+    )
+    cur.execute(
+        "INSERT INTO notifications (user_id, message) VALUES (%s,%s)",
+        (uid, f"Your account currency has been changed to {new_currency}. New balance: {new_symbol}{new_balance:,.2f}")
+    )
+    con.commit()
+    con.close()
+    flash(f"Currency changed to {new_currency}. Balance converted: {new_symbol}{new_balance:,.2f}", "success")
+    return redirect(url_for("admin_edit_customer", uid=uid))
+
+
 # ─── ADMIN TOGGLE TRANSFER ──────────────────────────────────
 @app.route("/admin/toggle_transfer/<int:uid>", methods=["POST"])
 @login_required
@@ -856,4 +920,5 @@ def manifest():
 
 
 if __name__ == "__main__":
+    init_db()
     app.run(debug=True)
