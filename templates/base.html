@@ -36,9 +36,11 @@
     </button>
     <div class="mobile-logo" id="mob-logo">
       <img src="{{ url_for('static', filename='logo.png') }}" class="logo-img-sm" alt="NovBank Logo">
-      <span class="logo-text" style="color: #0a2342;">NovBank</span>
+      <span class="logo-text">NovBank</span>
     </div>
-    <div id="lang-switcher-container-mobile" style="flex:1;display:flex;justify-content:flex-end;padding-right:10px"></div>
+    <div id="lang-switcher-container-mobile" style="flex:1;display:flex;justify-content:flex-end;gap:4px;padding-right:6px">
+      <div id="currency-switcher-container-mobile"></div>
+    </div>
     <button class="hamburger" id="hamburger" aria-label="Open menu">
       <span></span><span></span><span></span>
     </button>
@@ -51,10 +53,13 @@
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <img src="{{ url_for('static', filename='logo.png') }}" class="logo-img" alt="NovBank Logo">
-      <span class="logo-text" style="color: #0a2342;">NovBank</span>
+      <span class="logo-text">NovBank</span>
     </div>
 
-    <div style="padding:10px 14px 0"><div id="lang-switcher-container"></div></div>
+    <div style="padding:10px 14px 0">
+      <div id="lang-switcher-container"></div>
+      <div id="currency-switcher-container" style="margin-top:6px"></div>
+    </div>
     <nav class="sidebar-nav">
       {% if session.get('role') == 'admin' %}
         <a href="{{ url_for('admin_dashboard') }}" class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
