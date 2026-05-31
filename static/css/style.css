@@ -232,14 +232,31 @@ html, body {
   border-bottom: 1px solid var(--border);
   padding: 0 16px;
   height: 58px;
-  position: sticky;
-  top: 0;
+  position: fixed;
+  top: 0; left: 0; right: 0;
   z-index: 200;
   flex-shrink: 0;
+  box-shadow: 0 1px 0 var(--border);
 }
 .mobile-logo { display: flex; align-items: center; gap: 8px; }
 .mobile-logo .logo-text { font-size: 17px; color: var(--navy); }
 
+.mob-back-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+  padding: 0;
+}
+.mob-back-btn svg { width: 20px; height: 20px; fill: var(--navy); }
+.mob-back-btn:hover { background: var(--navy-light); }
 .hamburger {
   display: flex;
   flex-direction: column;
@@ -956,14 +973,26 @@ html, body {
     position: fixed;
     top: 0; left: 0;
     height: 100vh;
+    height: 100dvh;
     z-index: 300;
     transform: translateX(-100%);
     transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
     box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sidebar-footer {
+    flex-shrink: 0;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
   }
   .sidebar.open { transform: translateX(0); }
   .app-shell { flex-direction: column; height: auto; min-height: 100vh; }
-  .main-content { padding: 16px 16px 80px; }
+  .main-content { padding: 74px 16px 100px; }
   .page-header { flex-direction: column; gap: 12px; margin-bottom: 18px; }
   .page-title { font-size: 24px; }
   .header-actions { width: 100%; }
