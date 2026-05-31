@@ -167,6 +167,7 @@
 <script>
 const monthsData = {{ months_data|safe }};
 const catData    = {{ cat_data|safe }};
+const currencySymbol = {{ user['currency_symbol'] or '$' | tojson }};
 
 // Register gradient plugin
 Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
@@ -233,7 +234,7 @@ new Chart(barCtx, {
         cornerRadius: 10,
         displayColors: true,
         callbacks: {
-          label: ctx => '  ' + ctx.dataset.label + ':  $' + ctx.parsed.y.toLocaleString('en-US', {minimumFractionDigits:2})
+          label: ctx => '  ' + ctx.dataset.label + ':  ' + currencySymbol + ctx.parsed.y.toLocaleString('en-US', {minimumFractionDigits:2})
         }
       }
     },
@@ -249,7 +250,7 @@ new Chart(barCtx, {
         ticks: {
           color: '#6b7280',
           font: { size: 11 },
-          callback: v => '$' + (v >= 1000 ? (v/1000).toFixed(0)+'k' : v)
+          callback: v => currencySymbol + (v >= 1000 ? (v/1000).toFixed(0)+'k' : v)
         }
       }
     }
@@ -288,7 +289,7 @@ if (catData.length > 0) {
           padding: 12,
           cornerRadius: 10,
           callbacks: {
-            label: ctx => '  $' + ctx.parsed.toLocaleString('en-US', {minimumFractionDigits:2}) +
+            label: ctx => '  ' + currencySymbol + ctx.parsed.toLocaleString('en-US', {minimumFractionDigits:2}) +
                           '  (' + ((ctx.parsed/total)*100).toFixed(1) + '%)'
           }
         }
@@ -301,7 +302,7 @@ if (catData.length > 0) {
           center.innerHTML = `<div style="font-size:18px;font-weight:700;color:var(--navy)">${pct}%</div><div style="font-size:11px;color:var(--text-muted)">${catData[i].cat}</div>`;
         } else {
           const pct = ((total/total)*100).toFixed(0);
-          center.innerHTML = `<div style="font-size:15px;font-weight:700;color:var(--navy)">$${(total/1000).toFixed(1)}k</div><div style="font-size:11px;color:var(--text-muted)">Total</div>`;
+          center.innerHTML = `<div style="font-size:15px;font-weight:700;color:var(--navy)">${currencySymbol}${(total/1000).toFixed(1)}k</div><div style="font-size:11px;color:var(--text-muted)">Total</div>`;
         }
       }
     }
@@ -309,7 +310,7 @@ if (catData.length > 0) {
 
   // Center label default
   const center = document.getElementById('donut-center');
-  center.innerHTML = `<div style="font-size:15px;font-weight:700;color:var(--navy)">$${total >= 1000 ? (total/1000).toFixed(1)+'k' : total.toFixed(0)}</div><div style="font-size:11px;color:var(--text-muted)">Total</div>`;
+  center.innerHTML = `<div style="font-size:15px;font-weight:700;color:var(--navy)">${currencySymbol}${total >= 1000 ? (total/1000).toFixed(1)+'k' : total.toFixed(0)}</div><div style="font-size:11px;color:var(--text-muted)">Total</div>`;
 
   // Custom legend with mini bars
   const legend = document.getElementById('donut-legend');
