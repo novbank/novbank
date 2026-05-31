@@ -38,9 +38,7 @@
       <img src="{{ url_for('static', filename='logo.png') }}" class="logo-img-sm" alt="NovBank Logo">
       <span class="logo-text">NovBank</span>
     </div>
-    <div id="lang-switcher-container-mobile" style="flex:1;display:flex;justify-content:flex-end;gap:4px;padding-right:6px">
-      <div id="currency-switcher-container-mobile"></div>
-    </div>
+    <div id="lang-switcher-container-mobile" style="flex:1;display:flex;justify-content:flex-end;gap:4px;padding-right:6px"></div>
     <button class="hamburger" id="hamburger" aria-label="Open menu">
       <span></span><span></span><span></span>
     </button>
@@ -58,7 +56,6 @@
 
     <div style="padding:10px 14px 0">
       <div id="lang-switcher-container"></div>
-      <div id="currency-switcher-container" style="margin-top:6px"></div>
     </div>
     <nav class="sidebar-nav">
       {% if session.get('role') == 'admin' %}

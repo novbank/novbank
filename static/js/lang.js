@@ -20,121 +20,6 @@ const LANGS = {
   ha: { name:"Hausa",      flag:"🇳🇬", dir:"ltr" },
 };
 
-// ── CURRENCY ─────────────────────────────────────────────────
-const CURRENCIES = {
-  USD: { symbol: "$",  name: "US Dollar",       flag: "🇺🇸" },
-  EUR: { symbol: "€",  name: "Euro",            flag: "🇪🇺" },
-  GBP: { symbol: "£",  name: "British Pound",   flag: "🇬🇧" },
-  JPY: { symbol: "¥",  name: "Japanese Yen",    flag: "🇯🇵" },
-  CAD: { symbol: "C$", name: "Canadian Dollar", flag: "🇨🇦" },
-  AUD: { symbol: "A$", name: "Australian Dollar",flag:"🇦🇺" },
-  CHF: { symbol: "Fr", name: "Swiss Franc",     flag: "🇨🇭" },
-  CNY: { symbol: "¥",  name: "Chinese Yuan",    flag: "🇨🇳" },
-  INR: { symbol: "₹",  name: "Indian Rupee",    flag: "🇮🇳" },
-  NGN: { symbol: "₦",  name: "Nigerian Naira",  flag: "🇳🇬" },
-  XOF: { symbol: "CFA",name: "West African CFA",flag: "🌍" },
-  GHS: { symbol: "₵",  name: "Ghanaian Cedi",   flag: "🇬🇭" },
-  KES: { symbol: "Ksh",name: "Kenyan Shilling", flag: "🇰🇪" },
-  ZAR: { symbol: "R",  name: "South African Rand",flag:"🇿🇦" },
-  BRL: { symbol: "R$", name: "Brazilian Real",  flag: "🇧🇷" },
-  MXN: { symbol: "MX$",name: "Mexican Peso",    flag: "🇲🇽" },
-  AED: { symbol: "د.إ",name: "UAE Dirham",      flag: "🇦🇪" },
-  SAR: { symbol: "﷼",  name: "Saudi Riyal",     flag: "🇸🇦" },
-  SGD: { symbol: "S$", name: "Singapore Dollar",flag: "🇸🇬" },
-  HKD: { symbol: "HK$",name: "Hong Kong Dollar",flag: "🇭🇰" },
-};
-
-let ratesCache = null;
-let ratesFetchedAt = 0;
-
-async function getRates() {
-  const now = Date.now();
-  if (ratesCache && now - ratesFetchedAt < 60 * 60 * 1000) return ratesCache;
-  try {
-    const res = await fetch('https://open.er-api.com/v6/latest/USD');
-    const data = await res.json();
-    if (data && data.rates) {
-      ratesCache = data.rates;
-      ratesFetchedAt = now;
-      return ratesCache;
-    }
-  } catch(e) {}
-  // fallback static rates if API fails
-  return {
-    USD:1, EUR:0.92, GBP:0.79, JPY:149.5, CAD:1.36, AUD:1.53,
-    CHF:0.90, CNY:7.24, INR:83.1, NGN:1580, XOF:602, GHS:15.3,
-    KES:129, ZAR:18.6, BRL:4.97, MXN:17.1, AED:3.67, SAR:3.75,
-    SGD:1.34, HKD:7.82
-  };
-}
-
-function getCurrentCurrency() {
-  return localStorage.getItem('novbank_currency') || 'USD';
-}
-
-async function applyCurrency(code) {
-  if (!CURRENCIES[code]) return;
-  localStorage.setItem('novbank_currency', code);
-  const cur = CURRENCIES[code];
-  const rates = await getRates();
-  const rate = rates[code] || 1;
-
-  // Find all money elements — they have data-usd attribute (original USD value)
-  document.querySelectorAll('[data-usd]').forEach(el => {
-    const usd = parseFloat(el.getAttribute('data-usd'));
-    const converted = usd * rate;
-    const formatted = code === 'JPY' || code === 'KES' || code === 'NGN' || code === 'XOF'
-      ? Math.round(converted).toLocaleString()
-      : converted.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    el.textContent = cur.symbol + formatted;
-  });
-
-  updateCurrencyBtn(code);
-}
-
-function updateCurrencyBtn(code) {
-  const cur = CURRENCIES[code];
-  document.querySelectorAll('.currency-globe-btn').forEach(btn => {
-    btn.innerHTML = `<span style="font-size:13px;font-weight:700">${cur.symbol}</span> <span style="font-size:11px">${code}</span>`;
-  });
-}
-
-function buildCurrencySwitcher() {
-  ['currency-switcher-container', 'currency-switcher-container-mobile'].forEach(id => {
-    const wrap = document.getElementById(id);
-    if (!wrap) return;
-    const cur = getCurrentCurrency();
-
-    wrap.innerHTML = `
-      <div class="currency-switcher-wrap" style="position:relative">
-        <button class="currency-globe-btn lang-globe-btn" onclick="toggleCurrencyMenu('${id}')" title="Change currency">
-          <span style="font-size:13px;font-weight:700">${CURRENCIES[cur].symbol}</span>
-          <span style="font-size:11px">${cur}</span>
-        </button>
-        <div class="currency-menu lang-menu" id="currency-menu-${id}">
-          <div class="lang-menu-header">Select Currency</div>
-          <div class="lang-menu-grid">
-            ${Object.entries(CURRENCIES).map(([code, info]) => `
-              <button class="lang-opt ${code === cur ? 'active' : ''}"
-                onclick="applyCurrency('${code}');toggleCurrencyMenu('${id}')">
-                <span class="lo-flag">${info.flag}</span>
-                <span class="lo-name">${info.symbol} ${code}</span>
-              </button>
-            `).join('')}
-          </div>
-        </div>
-      </div>
-    `;
-  });
-  applyCurrency(getCurrentCurrency());
-}
-
-function toggleCurrencyMenu(wrapperId) {
-  const menu = document.getElementById('currency-menu-' + wrapperId);
-  if (menu) menu.classList.toggle('open');
-}
-
-
 // ── LANGUAGE ─────────────────────────────────────────────────
 // Static translations for known UI keys (fast, no API)
 const T = {
@@ -351,15 +236,10 @@ document.addEventListener('click', e => {
   if (menu && menu.classList.contains('open') && !menu.contains(e.target) && btn && !btn.contains(e.target)) {
     menu.classList.remove('open');
   }
-  // Close currency menus on outside click
-  document.querySelectorAll('.currency-menu.open').forEach(m => {
-    if (!m.contains(e.target)) m.classList.remove('open');
-  });
 });
 
 document.addEventListener('DOMContentLoaded', () => {
   buildLangSwitcher();
-  buildCurrencySwitcher();
   const stored   = localStorage.getItem('novbank_lang');
   const detected = detectBrowserLang();
   if (stored && LANGS[stored]) {
