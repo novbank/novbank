@@ -260,6 +260,24 @@ def admin_required(f):
     return decorated
 
 
+# ─── CONTEXT PROCESSOR ─────────────────────────────────────
+@app.context_processor
+def inject_avatar():
+    avatar = ""
+    if "user_id" in session:
+        try:
+            con = get_db()
+            cur = con.cursor()
+            cur.execute("SELECT avatar FROM users WHERE id=%s", (session["user_id"],))
+            row = cur.fetchone()
+            con.close()
+            if row and row["avatar"]:
+                avatar = row["avatar"]
+        except:
+            pass
+    return dict(current_avatar=avatar)
+
+
 # ─── AUTH ROUTES ────────────────────────────────────────────
 @app.route("/", methods=["GET", "POST"])
 def login():
@@ -277,7 +295,6 @@ def login():
             session["user_id"] = user["id"]
             session["role"]    = user["role"]
             session["name"]    = user["name"]
-            session["avatar"]  = user["avatar"] or ""
             return redirect(url_for("admin_dashboard", splash=1) if user["role"] == "admin" else url_for("dashboard", splash=1))
         error = "Invalid email or password."
     return render_template("login.html", error=error)
@@ -844,9 +861,6 @@ def admin_upload_avatar(uid):
     cur.execute("UPDATE users SET avatar=%s WHERE id=%s", (data_url, uid))
     con.commit()
     con.close()
-    # Refresh session avatar if admin is viewing their own profile (unlikely but safe)
-    if session.get("user_id") == uid:
-        session["avatar"] = data_url
     flash("Profile photo updated successfully.", "success")
     return redirect(url_for("admin_edit_customer", uid=uid))
 
