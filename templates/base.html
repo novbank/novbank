@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NovBank — {% block title %}{% endblock %}</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-<link rel="manifest" href="/manifest.json"><link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
+<link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='logo.png') }}">
 <meta name="theme-color" content="#0a2342">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -51,7 +53,7 @@
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <img src="{{ url_for('static', filename='logo.png') }}" class="logo-img" alt="NovBank Logo">
-      <span class="logo-text" style="color: #0a2342;">NovBank</span>
+      <span class="logo-text">NovBank</span>
     </div>
 
     <div style="padding:10px 14px 0">
@@ -113,7 +115,11 @@
 
     <div class="sidebar-footer">
       <div class="user-info-small">
+        {% if session.get('avatar') %}
+        <img src="{{ session.get('avatar') }}" class="avatar-sm-img" alt="avatar">
+        {% else %}
         <div class="avatar-sm">{{ session.get('name', 'U')[0] }}</div>
+        {% endif %}
         <div>
           <div class="user-name-sm">{{ session.get('name') }}</div>
           <div class="user-role-sm">{{ session.get('role')|capitalize }}</div>

@@ -140,16 +140,14 @@ def init_db():
         member_since TEXT,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         currency TEXT DEFAULT 'USD',
-        currency_symbol TEXT DEFAULT '$'
+        currency_symbol TEXT DEFAULT '$',
+        avatar TEXT DEFAULT NULL
     )""")
 
-    # Migration: add currency columns if they don't exist yet
-    cur.execute("""
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'USD'
-    """)
-    cur.execute("""
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS currency_symbol TEXT DEFAULT '$'
-    """)
+    # Migration: add columns if they don't exist yet
+    cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'USD'")
+    cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS currency_symbol TEXT DEFAULT '$'")
+    cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT DEFAULT NULL")
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS transactions (
@@ -279,6 +277,7 @@ def login():
             session["user_id"] = user["id"]
             session["role"]    = user["role"]
             session["name"]    = user["name"]
+            session["avatar"]  = user["avatar"] or ""
             return redirect(url_for("admin_dashboard", splash=1) if user["role"] == "admin" else url_for("dashboard", splash=1))
         error = "Invalid email or password."
     return render_template("login.html", error=error)
@@ -816,6 +815,52 @@ def admin_change_currency(uid):
     con.commit()
     con.close()
     flash(f"Currency changed to {new_currency}. Balance converted: {new_symbol}{new_balance:,.2f}", "success")
+    return redirect(url_for("admin_edit_customer", uid=uid))
+
+
+# ─── ADMIN UPLOAD AVATAR ────────────────────────────────────
+@app.route("/admin/upload_avatar/<int:uid>", methods=["POST"])
+@login_required
+@admin_required
+def admin_upload_avatar(uid):
+    import base64
+    from flask import flash
+    file = request.files.get("avatar")
+    if not file or file.filename == "":
+        flash("No file selected.", "error")
+        return redirect(url_for("admin_edit_customer", uid=uid))
+    allowed = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+    if file.content_type not in allowed:
+        flash("Only JPG, PNG, WEBP or GIF images allowed.", "error")
+        return redirect(url_for("admin_edit_customer", uid=uid))
+    data = file.read()
+    if len(data) > 2 * 1024 * 1024:  # 2MB max
+        flash("Image too large. Maximum size is 2MB.", "error")
+        return redirect(url_for("admin_edit_customer", uid=uid))
+    b64 = base64.b64encode(data).decode("utf-8")
+    data_url = f"data:{file.content_type};base64,{b64}"
+    con = get_db()
+    cur = con.cursor()
+    cur.execute("UPDATE users SET avatar=%s WHERE id=%s", (data_url, uid))
+    con.commit()
+    con.close()
+    # Refresh session avatar if admin is viewing their own profile (unlikely but safe)
+    if session.get("user_id") == uid:
+        session["avatar"] = data_url
+    flash("Profile photo updated successfully.", "success")
+    return redirect(url_for("admin_edit_customer", uid=uid))
+
+@app.route("/admin/remove_avatar/<int:uid>", methods=["POST"])
+@login_required
+@admin_required
+def admin_remove_avatar(uid):
+    from flask import flash
+    con = get_db()
+    cur = con.cursor()
+    cur.execute("UPDATE users SET avatar=NULL WHERE id=%s", (uid,))
+    con.commit()
+    con.close()
+    flash("Profile photo removed.", "success")
     return redirect(url_for("admin_edit_customer", uid=uid))
 
 

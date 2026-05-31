@@ -51,6 +51,50 @@
     <div class="section-card-header">
       <h2 class="section-card-title">Edit Account</h2>
     </div>
+
+    <!-- AVATAR UPLOAD -->
+    <div class="avatar-upload-wrap">
+      <div class="avatar-upload-preview" id="avatar-preview-wrap">
+        {% if customer['avatar'] %}
+        <img src="{{ customer['avatar'] }}" alt="Avatar" class="avatar-upload-img" id="avatar-preview-img">
+        {% else %}
+        <div class="avatar-upload-initials" id="avatar-initials">{{ customer['name'][0] }}</div>
+        <img src="" alt="Avatar" class="avatar-upload-img" id="avatar-preview-img" style="display:none">
+        {% endif %}
+        <div class="avatar-upload-overlay" onclick="document.getElementById('avatar-file-input').click()">
+          <svg viewBox="0 0 24 24"><path d="M12 15.2l-4.8-4.8H10V4h4v6.4h2.8L12 15.2zM20 18H4v2h16v-2z"/></svg>
+          <span>Change</span>
+        </div>
+      </div>
+      <div class="avatar-upload-info">
+        <div class="avatar-upload-name">{{ customer['name'] }}</div>
+        <div class="avatar-upload-sub">{{ customer['email'] }}</div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <button type="button" class="btn-outline" style="font-size:12px;padding:6px 14px"
+            onclick="document.getElementById('avatar-file-input').click()">
+            📷 Upload Photo
+          </button>
+          {% if customer['avatar'] %}
+          <form method="POST" action="{{ url_for('admin_remove_avatar', uid=customer['id']) }}"
+                onsubmit="return confirm('Remove this profile photo?')">
+            <button type="submit" class="btn-outline" style="font-size:12px;padding:6px 14px;color:var(--red);border-color:var(--red)">
+              🗑 Remove
+            </button>
+          </form>
+          {% endif %}
+        </div>
+        <p class="form-hint" style="margin-top:8px">JPG, PNG or WEBP · Max 2MB</p>
+      </div>
+    </div>
+
+    <!-- HIDDEN FILE INPUT + UPLOAD FORM -->
+    <form method="POST" action="{{ url_for('admin_upload_avatar', uid=customer['id']) }}"
+          enctype="multipart/form-data" id="avatar-upload-form">
+      <input type="file" id="avatar-file-input" name="avatar"
+             accept="image/jpeg,image/png,image/webp"
+             style="display:none"
+             onchange="previewAndUpload(this)">
+    </form>
     <form method="POST">
       <div class="form-group">
         <label>Full Name</label>
@@ -213,4 +257,97 @@
 <style>
 .btn-danger { display:inline-flex;align-items:center;justify-content:center;background:var(--red);color:#fff;padding:10px 20px;border-radius:8px;font-size:13.5px;font-weight:500;border:none;cursor:pointer;font-family:var(--font);transition:opacity .15s; }
 .btn-danger:hover { opacity:.88; }
+
+/* ── AVATAR UPLOAD ── */
+.avatar-upload-wrap {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.avatar-upload-preview {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  cursor: pointer;
+  overflow: hidden;
+  background: var(--navy);
+  box-shadow: 0 2px 12px rgba(10,35,66,0.18);
+}
+.avatar-upload-initials {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+}
+.avatar-upload-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.avatar-upload-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10,35,66,0.55);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.avatar-upload-overlay svg { width: 20px; height: 20px; fill: #fff; }
+.avatar-upload-preview:hover .avatar-upload-overlay { opacity: 1; }
+.avatar-upload-info { flex: 1; }
+.avatar-upload-name { font-size: 16px; font-weight: 700; color: var(--navy); }
+.avatar-upload-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+/* Upload progress indicator */
+.avatar-uploading .avatar-upload-overlay {
+  opacity: 1;
+}
+.avatar-uploading .avatar-upload-overlay::after {
+  content: 'Uploading...';
+  font-size: 10px;
+}
 </style>
+
+<script>
+function previewAndUpload(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+
+  // Show preview immediately
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = document.getElementById('avatar-preview-img');
+    const initials = document.getElementById('avatar-initials');
+    if (img) {
+      img.src = e.target.result;
+      img.style.display = 'block';
+    }
+    if (initials) initials.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+
+  // Auto-submit the form
+  const wrap = document.getElementById('avatar-preview-wrap');
+  if (wrap) wrap.classList.add('avatar-uploading');
+  document.getElementById('avatar-upload-form').submit();
+}
+</script>
