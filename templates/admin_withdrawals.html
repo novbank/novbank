@@ -37,7 +37,7 @@
         <td class="td-date">{{ r['created_at'][:10] }}</td>
         <td><strong>{{ r['user_name'] }}</strong></td>
         <td class="mono" style="font-size:12px">{{ r['account_number'] }}</td>
-        <td class="td-amount dr">${{ "{:,.2f}".format(r['amount']) }}</td>
+        <td class="td-amount dr">{{ r['currency_symbol'] or '$' }}{{ "{:,.2f}".format(r['amount']) }}</td>
         <td>{{ r['method'] }}</td>
         <td style="color:var(--text-muted);font-size:12px;max-width:120px">{{ r['note'] or '—' }}</td>
         <td>

@@ -65,7 +65,7 @@
         </select>
       </div>
       <div class="form-group">
-        <label>Balance (USD)</label>
+        <label>Balance ({{ customer['currency'] or 'USD' }})</label>
         <div class="input-prefix-wrap">
           <span class="input-prefix">$</span>
           <input type="number" name="balance" value="{{ customer['balance'] }}" step="0.01" min="0" required style="padding-left:2rem">
@@ -96,7 +96,7 @@
       </div>
       <div class="detail-row">
         <span class="dr-label">Current Balance</span>
-        <span class="dr-value strong">${{ "{:,.2f}".format(customer['balance']) }}</span>
+        <span class="dr-value strong">{{ customer['currency_symbol'] or '$' }}{{ "{:,.2f}".format(customer['balance']) }}</span>
       </div>
       <div class="detail-row">
         <span class="dr-label">Phone</span>
@@ -197,9 +197,9 @@
         <td><span class="cat-badge">{{ t['category'] }}</span></td>
         <td><span class="type-badge {{ 'cr' if t['type']=='CR' else 'dr' }}">{{ t['type'] }}</span></td>
         <td class="td-amount {{ 'cr' if t['type']=='CR' else 'dr' }}">
-          {{ '+' if t['type']=='CR' else '-' }}${{ "{:,.2f}".format(t['amount']) }}
+          {{ '+' if t['type']=='CR' else '-' }}{{ customer['currency_symbol'] or '$' }}{{ "{:,.2f}".format(t['amount']) }}
         </td>
-        <td style="text-align:right">${{ "{:,.2f}".format(t['balance_after']) }}</td>
+        <td style="text-align:right">{{ customer['currency_symbol'] or '$' }}{{ "{:,.2f}".format(t['balance_after']) }}</td>
       </tr>
       {% endfor %}
     </tbody>

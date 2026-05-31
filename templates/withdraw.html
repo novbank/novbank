@@ -26,9 +26,9 @@
     <form method="POST" id="withdraw-form">
 
       <div class="form-group">
-        <label>Withdrawal Amount (USD)</label>
+        <label>Withdrawal Amount ({{ user['currency'] or 'USD' }})</label>
         <div class="input-prefix-wrap">
-          <span class="input-prefix">$</span>
+          <span class="input-prefix">{{ user['currency_symbol'] or '$' }}</span>
           <input type="number" name="amount" id="amount" placeholder="0.00" min="1" step="0.01" required style="padding-left:2rem">
         </div>
       </div>

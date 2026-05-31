@@ -123,7 +123,7 @@
         <td><span class="cat-badge">{{ t['category'] }}</span></td>
         <td><span class="status-badge status-{{ t['status'].lower() }}">{{ t['status'] }}</span></td>
         <td class="td-amount {{ 'cr' if t['type']=='CR' else 'dr' }}">
-          {{ '+' if t['type']=='CR' else '-' }}${{ "{:,.2f}".format(t['amount']) }}
+          {{ '+' if t['type']=='CR' else '-' }}{{ user['currency_symbol'] or '$' }}{{ "{:,.2f}".format(t['amount']) }}
         </td>
       </tr>
       {% endfor %}

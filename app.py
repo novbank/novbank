@@ -863,7 +863,8 @@ def admin_freeze(uid):
 def admin_withdrawals():
     con = get_db()
     cur = con.cursor()
-    cur.execute("""SELECT w.*, u.name as user_name, u.account_number, u.balance
+    cur.execute("""SELECT w.*, u.name as user_name, u.account_number, u.balance,
+        u.currency_symbol, u.currency
         FROM withdrawal_requests w JOIN users u ON w.user_id = u.id
         ORDER BY w.created_at DESC""")
     requests = cur.fetchall()
