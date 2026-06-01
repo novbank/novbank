@@ -621,6 +621,7 @@ html, body {
 .btn-primary.full { width: 100%; }
 
 .btn-outline {
+  margin: 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -779,7 +780,7 @@ html, body {
   border-radius: 20px;
   font-size: 13.5px;
   color: var(--blue);
-  margin-bottom: 22px;
+  margin: 0 22px 22px 22px;
   font-weight: 500;
 }
 
